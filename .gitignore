@@ -1,0 +1,70 @@
+# -- macOS System Files --
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Trashes
+.Spotlight-V100
+.TemporaryItems
+
+# -- Vim / Neovim --
+# Swap files
+*.swp
+*.swo
+# Session files
+Session.vim
+# Undo files (if you store them locally)
+.*.un~
+# Netrw history
+.netrwhist
+# Plugins (if you use a plugin manager that downloads into the repo)
+# plugin/
+# pack/
+
+# -- Generic Backups --
+*~
+*.bak
+*.tmp
+
+# -- Sensitive Information (CRITICAL) --
+# Never commit private keys or history
+.ssh/id_rsa
+.ssh/id_ed25519
+.bash_history
+.zsh_history
+.lesshst
+.wget-hsts
+*.token
+*.pem
+
+# -- Stow --
+# Ignore the stow ignore file if you don't want to track strict local ignores
+# (Though usually, you DO want to track this file)
+# .stow-local-ig
+
+# --- Simulink Cache & Generated Files ---
+# These are the specific cache files you asked about
+*.slxc
+
+# Generated code folders (often created during simulation)
+slprj/
+sfprj/
+codegen/
+
+# --- Autosaves & Temporary Files ---
+# MATLAB Editor autosaves
+*.asv
+
+# Simulink autosaves and recovery files
+*.autosave
+*.slx.r*
+*.mdl.r*
+*.slx.original
+
+# --- Compiled Binaries ---
+# MEX files (compiled C/C++ code)
+*.mex*
+
+# --- App Packaging ---
+*.mlappinstall
+*.mltbxnore
