@@ -34,10 +34,10 @@ VaTrim = utEas2Tas(Eas_KTS*KTS2MS, hTrimFL*FL2M);
 hTrim = hTrimFL*FL2M;
 dthrIdle = 0.1;
 trimVal = utComputeTrimIdle(hTrim,VaTrim,aircraftChosen,km,ms,dthrIdle); %trim thrust idle
-dPHRTrim = trimVal(1) %rad
-alphaTrim = trimVal(2) %rad
-thetaTrim = trimVal(3) %rad
-fpaDeg = RAD2DEG*(thetaTrim-alphaTrim) %pente, flight path angle
+dPHRTrim = trimVal(1); %rad
+alphaTrim = trimVal(2); %rad
+thetaTrim = trimVal(3); %rad
+fpaDeg = RAD2DEG*(thetaTrim-alphaTrim); %pente, flight path angle
 
 %Linearisation
 %vecteur d'etat au point de trim
@@ -50,10 +50,13 @@ xTrim(itheta) = thetaTrim; %rad
 uTrim = zeros(TOTAL_CMD, 1);
 uTrim(idPHR) = dPHRTrim;
 uTrim(ithr) = dthrIdle;
-uTrim(idelevator) = 0
+uTrim(idelevator) = 0;
 
 %verification trim
-xdotTrim = utAcDynamicsFunction(xTrim,uTrim,aircraftChosen,km,ms)
+xdotTrim = utAcDynamicsFunction(xTrim,uTrim,aircraftChosen,km,ms);
 
 %linearisation autour du point de trim
-[A, B, C, D] = linmod('acDynModel_ToLinearize_2015',xTrim, uTrim)
+[A, B, C, D] = linmod('acDynModel_ToLinearize_2015',xTrim, uTrim);
+
+A4 = A(:,3:6)
+B4 = B(:,3)
