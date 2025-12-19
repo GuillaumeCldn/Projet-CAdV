@@ -1,4 +1,4 @@
-clear all
+clear
 close all
 %bdclose all %Close any or all Simulink systems
 clc
@@ -27,7 +27,7 @@ idelevator = 3;
 TOTAL_CMD = 3;
 
 %Choix de l'équipe
-groupe = 'prof' %rentrer son groupe
+groupe = 'golf'; %rentrer son groupe
 [aircraftChosen, aircraftName, hTrimFL, Eas_KTS, ms, km] = utGetTrimPoint(groupe);
 
 VaTrim = utEas2Tas(Eas_KTS*KTS2MS, hTrimFL*FL2M);

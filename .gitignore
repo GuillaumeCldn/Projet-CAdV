@@ -68,3 +68,5 @@ codegen/
 # --- App Packaging ---
 *.mlappinstall
 *.mltbxnore
+
+.xml
