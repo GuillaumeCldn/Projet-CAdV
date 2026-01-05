@@ -60,15 +60,34 @@ xdotTrim = utAcDynamicsFunction(xTrim,uTrim,aircraftChosen,km,ms)
 
 
 A4 = A(iVa:iq, iVa:iq)
-B4 = B(iVa:iq, iVa)
+B4 = B(iVa:iq, idelevator)
 
 C4 = [0, 0, 1, 0]
 D4 = 0
 
-state4 = ss2tf(A4, B4, C4, D4)
+[state4num, state4den] = ss2tf(A4, B4, C4, D4)
+state4 = tf(state4num, state4den)
 
 % Calcul des modes de A4
-
 modes4 = eig(A4)
-[Wn, zeta] = damp(A4)
+[Wn, zeta] = damp(A4);
+ % Nom des modes ? Deux pôles normaux et deux pôles très lents, principalement oscillatoires ? 
+
+% Specifications 
+ts = 3; % secondes
+D = 0.05; % %
+[Kp, Ki, Kd, m, w0, dp] = utWang(state4, ts, D, -5.66); % On prend Kp = - 6.14
+
+% Préfiltre
+FTBF_in = feedback(state4, tf([Kd, 0], 1)); % Fonction de transfert 'interne'
+FTBF = feedback(tf([Kd, Ki], [1, 0])*FTBF_in, 1);
+pole(FTBF)
+zero(FTBF)
+
+minFTBF = minreal(FTBF, 1e-4)
+
+q = minFTBF.den{1}; % Dénominateur de la FTBF
+Cpf = tf(q(end), minFTBF.num{1});
+
+
 
