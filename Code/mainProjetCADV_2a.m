@@ -109,19 +109,19 @@ uTrimcm = 0;
 [Acm, Bcm, Ccm, Dcm] = linmod('acDynModelGolfTenueClassique',xTrimcm, uTrimcm);
 
 % Commandablite du systeme
-rank(ctrb(Acm,Bcm));
+rank(ctrb(Acm,Bcm))
 
 % Observabilité du systeme
-rank(obsv(Acm,Ccm));
+rank(obsv(Acm,Ccm))
 
-A6 = Acm(iVa:end,iVa:end);
-B6 = Bcm(iVa:end,idelevator);
-C6 = Ccm(iVa:end,iVa:end);
+A6 = Acm(iVa:end, iVa:end);
+B6 = Bcm(iVa:end);
+C6 = Ccm(iVa:end, iVa:end);
 pA6 = eig(A6)
-Kcm = place(A6,B6,[dp, conj(dp), -3.3943 + 0.1544i, -3.3943 - 0.1544i, -5, -6, -7, -8]);
+K6 = place(A6,B6,[dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6])
 
-% Precommande
-H = -inv(Ccm*inv(A6-B6*K6)*B6);
+% % Precommande
+% H = -inv(Ccm*inv(A6-B6*K6)*B6);
 
 
 
