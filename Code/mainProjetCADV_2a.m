@@ -103,10 +103,7 @@ xTrimcm(ialpha) = alphaTrim; %rad
 xTrimcm(itheta) = thetaTrim; %rad
 
 % Vecteur de commande au point de trim choisi
-uTrimcm = zeros(TOTAL_CMD, 1);
-uTrimcm(idPHR) = dPHRTrim;
-uTrimcm(ithr) = dthrIdle;
-uTrimcm(idelevator) = 0; % Ou votre valeur de trim d'élévateur
+uTrimcm = 0;
 
 % Linearisation autour du point de trim
 [Acm, Bcm, Ccm, Dcm] = linmod('acDynModelGolfTenueClassique',xTrimcm, uTrimcm);
