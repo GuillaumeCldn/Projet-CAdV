@@ -27,7 +27,7 @@ idelevator = 3;
 TOTAL_CMD = 3;
 
 %Choix de l'équipe
-groupe = 'golf' %rentrer son groupe
+groupe = 'alpha' %rentrer son groupe
 [aircraftChosen, aircraftName, hTrimFL, Eas_KTS, ms, km] = utGetTrimPoint(groupe);
 
 VaTrim = utEas2Tas(Eas_KTS*KTS2MS, hTrimFL*FL2M);
@@ -46,52 +46,51 @@ xTrim(ihp) = hTrim; %m
 xTrim(iVa) = VaTrim; %m/sec
 xTrim(ialpha) = alphaTrim; %rad
 xTrim(itheta) = thetaTrim; %rad
-% Vecteur de commande au point de trim choisi
+%vecteur de commande au point de trim choisi
 uTrim = zeros(TOTAL_CMD, 1);
 uTrim(idPHR) = dPHRTrim;
 uTrim(ithr) = dthrIdle;
 uTrim(idelevator) = 0
 
-% Vérification trim
+%verification trim
 xdotTrim = utAcDynamicsFunction(xTrim,uTrim,aircraftChosen,km,ms)
 
-% Linéarisation autour du point de trim
+%linearisation autour du point de trim
 [A, B, C, D] = linmod('acDynModel_ToLinearize_2015',xTrim, uTrim)
 
+%% Modes
 
-A4 = A(iVa:iq, iVa:iq)
-B4 = B(iVa:iq, idelevator)
 
-C4 = [0, 0, 1, 0]
-D4 = 0
+Atheta = A(iVa:iq,iVa:iq)
+Btheta = B(iVa:iq , idelevator)
+Ctheta = [0 ,  0, 1, 0]
+[numFtheta,denFtheta] = ss2tf(Atheta, Btheta, Ctheta, 0)
+Ftheta = tf(numFtheta, denFtheta)
 
-[state4num, state4den] = ss2tf(A4, B4, C4, D4)
-state4 = tf(state4num, state4den)
+eig(Atheta)
+[Wn,Z] = damp(Atheta)
 
-% Calcul des modes de A4
-modes4 = eig(A4)
-[Wn, zeta] = damp(A4);
- % Nom des modes ? Deux pôles normaux et deux pôles très lents, principalement oscillatoires ? 
+%specification
+ts = 3 %sec
+D = 5/100
+[Kp, Ki, Kd, m, w0, dp] = utWang(Ftheta, ts, D,-4.7) %on prend kp = -4.7
 
-% Specifications 
-ts = 3; % secondes
-D = 0.05; % %
-[Kp, Ki, Kd, m, w0, dp] = utWang(state4, ts, D, -5.66); % On prend Kp = - 5.66
-
-% Préfiltre
-FTBF_in = feedback(state4, tf([Kd, 0], 1)); % Fonction de transfert 'interne'
-FTBF = feedback(tf([Kd, Ki], [1, 0])*FTBF_in, 1);
+FTBF_in = feedback(Ftheta , tf([Kd,0],1)) %fonction de transfert 'interne'
+FTBF = feedback( tf([Kp,Ki], [1,0])*FTBF_in,  1)
 pole(FTBF)
 zero(FTBF)
 
 minFTBF = minreal(FTBF, 1e-4)
 
-q = minFTBF.den{1}; % Dénominateur de la FTBF
-Cpf = tf(q(end), minFTBF.num{1})
-Cpf1 = tf(1,[dp,1])
+q0 = minFTBF.den{1}
+Cpf = tf(q0(end),minFTBF.num{1})
+Cpf1 = tf(1,[1/1.05,1])
+
+%% Comande par retour d'état
 
 
-%% Commande par retour d'état
+
+
 
 %Linearisation
 %vecteur d'etat au point de trim
@@ -104,13 +103,18 @@ xTrimcm(itheta) = thetaTrim; %rad
 uTrimcm = 0
 
 %linearisation autour du point de trim
-[Acm, Bcm, Ccm, Dcm] = linmod('acDynModel_ToLinearize_2015',xTrimcm, uTrimcm)
+[Acm, Bcm, Ccm, Dcm] = linmod('ToLinDeltaTheta',xTrimcm, uTrimcm)
 
 %Commandablite du systeme
 rank(ctrb(Acm,Bcm))
 
 Kcm = place(Acm,Bcm,[dp,conj(dp),-5,-6,-7,-8,-9,-10])
 eig(Acm-Bcm*Kcm)
+
+
+
+
+
 %Observabilité du systeme
 rank(obsv(Acm,Ccm))
 
@@ -119,16 +123,3 @@ B6 = Bcm(iVa:end )
 
 %precommande
 H = -inv(Ccm*inv(Acm-Bcm*Kcm)*Bcm)
-
-
-
-
-
-
-
-
-
-
-
-
-
