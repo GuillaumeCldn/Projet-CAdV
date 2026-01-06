@@ -3,7 +3,7 @@ close all
 %bdclose all %Close any or all Simulink systems
 clc
 
-%Conversion des unitÃ©s
+%Conversion des unités
 KTS2MS = 1852 / 3600;
 FL2M = 30.48 ;
 RAD2DEG = 180/pi; 
@@ -26,8 +26,8 @@ ithr = 2;
 idelevator = 3;
 TOTAL_CMD = 3;
 
-%Choix de l'Ã©quipe
-groupe = 'prof' %rentrer son groupe
+%Choix de l'équipe
+groupe = 'golf' %rentrer son groupe
 [aircraftChosen, aircraftName, hTrimFL, Eas_KTS, ms, km] = utGetTrimPoint(groupe);
 
 VaTrim = utEas2Tas(Eas_KTS*KTS2MS, hTrimFL*FL2M);
@@ -46,14 +46,48 @@ xTrim(ihp) = hTrim; %m
 xTrim(iVa) = VaTrim; %m/sec
 xTrim(ialpha) = alphaTrim; %rad
 xTrim(itheta) = thetaTrim; %rad
-%vecteur de commande au point de trim choisi
+% Vecteur de commande au point de trim choisi
 uTrim = zeros(TOTAL_CMD, 1);
 uTrim(idPHR) = dPHRTrim;
 uTrim(ithr) = dthrIdle;
 uTrim(idelevator) = 0
 
-%verification trim
+% Vérification trim
 xdotTrim = utAcDynamicsFunction(xTrim,uTrim,aircraftChosen,km,ms)
 
-%linearisation autour du point de trim
+% Linéarisation autour du point de trim
 [A, B, C, D] = linmod('acDynModel_ToLinearize_2015',xTrim, uTrim)
+
+
+A4 = A(iVa:iq, iVa:iq)
+B4 = B(iVa:iq, idelevator)
+
+C4 = [0, 0, 1, 0]
+D4 = 0
+
+[state4num, state4den] = ss2tf(A4, B4, C4, D4)
+state4 = tf(state4num, state4den)
+
+% Calcul des modes de A4
+modes4 = eig(A4)
+[Wn, zeta] = damp(A4);
+ % Nom des modes ? Deux pôles normaux et deux pôles très lents, principalement oscillatoires ? 
+
+% Specifications 
+ts = 3; % secondes
+D = 0.05; % %
+[Kp, Ki, Kd, m, w0, dp] = utWang(state4, ts, D, -5.66); % On prend Kp = - 6.14
+
+% Préfiltre
+FTBF_in = feedback(state4, tf([Kd, 0], 1)); % Fonction de transfert 'interne'
+FTBF = feedback(tf([Kd, Ki], [1, 0])*FTBF_in, 1);
+pole(FTBF)
+zero(FTBF)
+
+minFTBF = minreal(FTBF, 1e-4)
+
+q = minFTBF.den{1}; % Dénominateur de la FTBF
+Cpf = tf(q(end), minFTBF.num{1});
+
+
+
