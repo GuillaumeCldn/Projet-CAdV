@@ -79,8 +79,8 @@ D = 0.05; % %
 [Kp, Ki, Kd, m, w0, dp] = utWang(state4, ts, D, -5.66); % On prend Kp = - 5.66
 
 % Préfiltre
-FTBF_in = feedback(state4, tf([Kd, 0], 1)); % Fonction de transfert 'interne'
-FTBF = feedback(tf([Kd, Ki], [1, 0])*FTBF_in, 1);
+FTBF_in = feedback(state4, tf([Kp, 0], 1)); % Fonction de transfert 'interne'
+FTBF = feedback(tf([Kp, Ki], [1, 0])*FTBF_in, 1);
 pole(FTBF);
 zero(FTBF);
 
@@ -117,11 +117,12 @@ rank(obsv(Acm,Ccm))
 A6 = Acm(iVa:end, iVa:end);
 B6 = Bcm(iVa:end);
 C6 = Ccm(iVa:end, iVa:end);
+C6_pour_h = Ccm(iVa, iVa:end);
 pA6 = eig(A6)
 K6 = place(A6,B6,[dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6])
 
-% % Precommande
-% H = -inv(Ccm*inv(A6-B6*K6)*B6);
+% Precommande
+H = -inv(C6_pour_h*inv(A6-B6*K6)*B6)
 
 
 
