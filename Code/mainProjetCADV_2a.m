@@ -121,8 +121,37 @@ C6_pour_h = Ccm(iVa, iVa:end);
 pA6 = eig(A6);
 K6 = place(A6,B6,[dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6]);
 
+
+
 % Precommande
 H = -inv(C6_pour_h*inv(A6-B6*K6)*B6);
+
+% On doit identifier quelle ligne de C6 correspond à Va pour l'intégrateur
+C_Va = zeros(1, size(A6, 2));
+C_Va(1) = 1; 
+
+
+A_aug = [A6, zeros(size(A6,1), 1); 
+        -C_Va, 0]; 
+        
+B_aug = [B6; 
+         0];
+
+% Vérification de commandabilité
+if rank(ctrb(A_aug, B_aug)) < size(A_aug, 1)
+    error("Le système augmenté n'est pas commandable");
+end
+
+% Calcul des gains sur le système AUGMENTÉ (taille 7)
+% On ajoute un pôle pour l'intégrateur
+poles_desires = [dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6, -7]; 
+
+K_aug = place(A_aug, B_aug, poles_desires);
+
+% Séparation des gains pour Simulink
+K_x = K_aug(1:end-1); % Gains pour le retour d'état classique
+K_i = K_aug(end);     % Gain pour l'intégrateur
+
 
 Cobs = [C6(1,:); C6(3,:); C6(4,:)];
 rank(obsv(A6,Cobs));
