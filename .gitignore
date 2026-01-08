@@ -68,3 +68,13 @@ codegen/
 # --- App Packaging ---
 *.mlappinstall
 *.mltbxnore
+
+# --- LaTeX ---
+*.aux
+*.bbl
+*.blg
+*.lof
+*.log
+*.out
+*.synctex.gz
+*.toc
