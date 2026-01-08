@@ -69,3 +69,13 @@ codegen/
 *.mlappinstall
 *.mltbxnore
 
+# --- Tex files ---
+*.aux
+*.bbl
+*.blg
+*.lof
+*.log
+*.out
+*.synctex.gz
+*.toc
+

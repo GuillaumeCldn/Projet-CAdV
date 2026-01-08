@@ -1,0 +1,91 @@
+\documentclass[12pt,oneside]{scrreprt}
+
+% ---------------------------------------------------------
+% PACKAGES
+% ---------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{float}
+\usepackage{fmtcount}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, matrix, decorations.pathreplacing, calc}
+\usepackage{wrapfig}
+%\usetikzlibrary{graphs, graphdrawing}
+%\usegdlibrary{circular}
+
+% ---------------------------------------------------------
+% MISE EN PAGE
+% ---------------------------------------------------------
+\usepackage[margin=2.5cm]{geometry}
+
+\setlength{\parskip}{0.85em}
+\setlength{\parindent}{1.2em}
+\linespread{1.15}
+
+% ---------------------------------------------------------
+% TITRES (méthode KOMA-Script)
+% ---------------------------------------------------------
+\RedeclareSectionCommand[
+beforeskip=1.8em plus 0.2em minus 0.2em,
+afterskip=1em,
+font=\normalfont\huge\bfseries]{chapter}
+
+\RedeclareSectionCommand[
+beforeskip=1.4em plus 0.2em minus 0.2em,
+afterskip=0.8em,
+font=\normalfont\Large\bfseries]{section}
+
+\RedeclareSectionCommand[
+beforeskip=1em plus 0.2em minus 0.2em,
+afterskip=0.5em,
+font=\normalfont\large\bfseries]{subsection}
+
+% ---------------------------------------------------------
+% TITRE DU RAPPORT
+% ---------------------------------------------------------
+\title{\Huge \bfseries Projet de synthèse}
+
+\author{%
+	\Large Marius Michaud\\
+	\texttt{marius.michaud@alumni.enac.fr}\\[1.2em]
+	\Large Guillaume Claudon\\
+	\texttt{guillaume.claudon@alumni.enac.fr}\\[1.2em]
+	\Large Ulysse Bourdic-Girard\\
+	\texttt{ulysse.bourdic-girard@alumni.enac.fr}\\[2em]
+	\large École Nationale de l’Aviation Civile (ENAC)%
+}
+
+\date{Novembre 2025}
+
+\publishers{
+	\includegraphics[width=4cm]{logo_enac.png}
+}
+
+
+% ---------------------------------------------------------
+\begin{document}
+	% ---------------------------------------------------------
+
+	\maketitle
+	\tableofcontents
+	\nopagebreak
+	\listoffigures
+	\clearpage
+	
+	\bibliographystyle{plain}
+	\bibliography{rapportCAdV}
+	
+	\chapter{Introduction}
+	Comme indiqué dans le sujet\cite{Sujet}...
+	\chapter{Conclusion}
+
+\end{document}
