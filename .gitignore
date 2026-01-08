@@ -83,3 +83,5 @@ codegen/
 *.fls
 *.lot
 *.fdb_latexmk
+*.bcf
+*.run.xml
