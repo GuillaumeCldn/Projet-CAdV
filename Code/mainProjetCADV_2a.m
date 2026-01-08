@@ -71,7 +71,7 @@ state4 = tf(state4num, state4den);
 % Calcul des modes de A4
 modes4 = eig(A4);
 [Wn, zeta] = damp(A4);
- % Nom des modes ? Deux pôles normaux et deux pôles très lents, principalement oscillatoires ? 
+% Nom des modes ? Deux pôles normaux et deux pôles très lents, principalement oscillatoires ? 
 
 % Specifications 
 ts = 3; % secondes
@@ -118,18 +118,17 @@ A6 = Acm(iVa:end, iVa:end);
 B6 = Bcm(iVa:end);
 C6 = Ccm(iVa:end, iVa:end);
 C6_pour_h = Ccm(iVa, iVa:end);
-pA6 = eig(A6)
-K6 = place(A6,B6,[dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6])
+pA6 = eig(A6);
+K6 = place(A6,B6,[dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6]);
 
 % Precommande
-H = -inv(C6_pour_h*inv(A6-B6*K6)*B6)
+H = -inv(C6_pour_h*inv(A6-B6*K6)*B6);
 
-Cobs = [C6(1,:)]%; C6(3,:)] %; C6(4,:)]
-rank(obsv(A6,Cobs))
-L6t = place(A6', Cobs', -1:-1:-6)
-L6 = L6t'
+Cobs = [C6(1,:)]%; C6(3,:)] %; C6(4,:)];
+rank(obsv(A6,Cobs));
+L6t = place(A6', Cobs', -1:-1:-6);
+L6 = L6t';
 eig(A6-L6*Cobs)
-eig(
 
 
 
