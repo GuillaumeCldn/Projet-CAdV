@@ -80,3 +80,6 @@ codegen/
 *.toc
 *.dvi
 *.out.ps
+*.fls
+*.lot
+*.fdb_latexmk
