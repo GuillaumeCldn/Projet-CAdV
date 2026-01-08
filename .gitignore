@@ -78,4 +78,5 @@ codegen/
 *.out
 *.synctex.gz
 *.toc
-
+*.dvi
+*.out.ps

@@ -67,25 +67,88 @@ font=\normalfont\large\bfseries]{subsection}
 \date{Novembre 2025}
 
 \publishers{
-	\includegraphics[width=4cm]{logo_enac.png}
+	\includegraphics[width=5cm]{logo_enac.png}
 }
 
 
 % ---------------------------------------------------------
 \begin{document}
-	% ---------------------------------------------------------
+% WARN: Le document ne doit pas faire plus de 20 pages!
 
+% ---------------------------------------------------------
 	\maketitle
 	\tableofcontents
 	\nopagebreak
 	\listoffigures
+	\listoftables
 	\clearpage
-	
 	\bibliographystyle{plain}
 	\bibliography{rapportCAdV}
-	
-	\chapter{Introduction}
-	Comme indiqué dans le sujet\cite{Sujet}...
-	\chapter{Conclusion}
+%----------------------------------------------------------
 
+%----------------------------------------------------------
+	\chapter{Introduction}
+%----------------------------------------------------------
+	Le but de ce projet est d'implémenter une loi de descente pour un avion de ligne. Cet avion est en vol stabilisé à un niveau de vol (FL) et une vitesse équivalente (\emph{EAS}) qui dépendent de chaque groupe. Il est autorisé par le contrôle aérien à descendre jusqu'au niveau $30$, où il se stabilise à une vitesse de \SI{230}{kts} \cite[4.1]{Sujet}. Le comportement de cette loi est synthétisé dans le schéma suivant:
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=\textwidth]{schema_sujet.png}
+		\caption{Comportement de la loi de descente \cite[Fig 4.1]{Sujet}}
+		\label{fig:schema_sujet}
+\end{figure}
+
+	L'avion en question est un Airbus A320 (groupe Golf). Il est caractérisé par un marge statique (\emph{ms}) et un coéfficient de masse (\emph{km}). La tableau suivant rappelle la valeur de ces paramètres ainsi que les conditions initiales de notre simulation:
+
+	\begin{table}[H]
+	\centering	
+	\caption{Paramètres caractéristiques de l'A320 \cite[Tab 2.1]{Sujet}}
+	\label{tab:parametres}
+	\begin{tabular}{@{}ll@{}}
+		\toprule
+		\textbf{Paramètre} & \textbf{Valeur} \\
+		\emph{ms} & $0.5$ \\
+		\emph{km} & $0.3$ \\
+		FL & $150$ \\
+		\emph{EAS} & \SI{260}{kts} \\
+		\bottomrule
+		\end{tabular}
+	\end{table}
+
+	Dans le cadre de ce projet, on ne considère que l'axe longitudinal de l'avion, on néglige l'influence des commandes de roulis et de lacet. Le modèle de l'avion est donc commandé par trois entrées \cite[4.3]{Sujet}:
+	\begin{itemize}
+		\item $\delta_{\text{PHR}}$: le braquage du plan horizontal réglable (PHR)
+		\item $\delta_{el}$: le braquage de la gouverne de profondeur
+		\item $\delta_{th}$: la position de la manette de poussée
+\end{itemize}
+
+	Pour remplir ce cahier des charges, nous allons découper la commande de l'avion en trois sous-commandes distinctes:
+	\begin{itemize}
+		\item \textbf{La commande de l'assiette} pour laquelle on implémentera une commande classique
+		\item \textbf{La loi de descente} pour laquelle on implémentera une commande modale
+		\item \textbf{Les lois de maintien du niveau et de la vitesse} pour lesquelles on implémentera une commande optimale
+	\end{itemize}
+	
+
+%----------------------------------------------------------
+	\chapter{Commande de l'assiette}
+%----------------------------------------------------------
+
+%----------------------------------------------------------
+	\chapter{Loi de descente}
+%----------------------------------------------------------
+
+%----------------------------------------------------------
+	\chapter{Lois de maintien du niveau et de la vitesse}
+%----------------------------------------------------------
+
+%----------------------------------------------------------
+	\chapter{Conclusion}
+%----------------------------------------------------------
+
+%----------------------------------------------------------
+	\chapter{Annexes}
+%----------------------------------------------------------
+
+%----------------------------------------------------------
 \end{document}
