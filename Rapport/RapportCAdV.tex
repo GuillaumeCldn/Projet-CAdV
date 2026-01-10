@@ -1,0 +1,262 @@
+\documentclass[12pt,oneside]{scrreprt}
+
+% ---------------------------------------------------------
+% PACKAGES
+% ---------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{float}
+\usepackage{fmtcount}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, matrix, decorations.pathreplacing, calc}
+\usepackage{wrapfig}
+
+% ---------------------------------------------------------
+% MISE EN PAGE
+% ---------------------------------------------------------
+\usepackage[margin=2.5cm]{geometry}
+
+\setlength{\parskip}{0.85em}
+\setlength{\parindent}{1.2em}
+\linespread{1.15}
+
+% ---------------------------------------------------------
+% TITRES (méthode KOMA-Script)
+% ---------------------------------------------------------
+\RedeclareSectionCommand[
+beforeskip=1.8em plus 0.2em minus 0.2em,
+afterskip=1em,
+font=\normalfont\huge\bfseries]{chapter}
+
+\RedeclareSectionCommand[
+beforeskip=1.4em plus 0.2em minus 0.2em,
+afterskip=0.8em,
+font=\normalfont\Large\bfseries]{section}
+
+\RedeclareSectionCommand[
+beforeskip=1em plus 0.2em minus 0.2em,
+afterskip=0.5em,
+font=\normalfont\large\bfseries]{subsection}
+
+% ---------------------------------------------------------
+% TITRE DU RAPPORT
+% ---------------------------------------------------------
+\title{\Huge \bfseries Projet de synthèse AVI}
+
+\author{%
+	\Large Marius Michaud\\
+	\texttt{marius.michaud@alumni.enac.fr}\\[1.2em]
+	\Large Guillaume Claudon\\
+	\texttt{guillaume.claudon@alumni.enac.fr}\\[1.2em]
+	\Large Ulysse Bourdic-Girard\\
+	\texttt{ulysse.bourdic-girard@alumni.enac.fr}\\[2em]
+	\large École Nationale de l’Aviation Civile (ENAC)%
+}
+
+\date{Janvier 2026}
+
+\publishers{
+	\includegraphics[width=5cm]{logo_enac.png}
+}
+
+
+% ---------------------------------------------------------
+\begin{document}
+	% WARN: Le document ne doit pas faire plus de 20 pages!
+	
+	% ---------------------------------------------------------
+	\maketitle
+	\tableofcontents
+	\nopagebreak
+	\listoffigures
+	\listoftables
+	\clearpage
+	\bibliographystyle{plain-fr}
+	\bibliography{rapportCAdV}
+	%----------------------------------------------------------
+	
+	%----------------------------------------------------------
+	\chapter{Introduction}
+	%----------------------------------------------------------
+	Le but de ce projet est d'implémenter une loi de descente pour un avion de ligne. Cet avion est en vol stabilisé à un niveau de vol (FL) et une vitesse équivalente (\emph{EAS}) qui dépendent de chaque groupe. Il est autorisé par le contrôle aérien à descendre jusqu'au niveau $30$, où il se stabilise à une vitesse de \SI{230}{kts} \cite[4.1]{Sujet}. Le comportement de cette loi est synthétisé dans le schéma suivant:
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=\textwidth]{schema_sujet.png}
+		\caption{Comportement de la loi de descente \cite[Fig 4.1]{Sujet}}
+		\label{fig:schema_sujet}
+	\end{figure}
+	
+	Dans le cadre de ce projet, on ne considère que l'axe longitudinal de l'avion, on néglige l'influence des commandes de roulis et de lacet. Le modèle de l'avion est donc commandé par trois entrées \cite[4.3]{Sujet}:
+	\begin{itemize}
+		\item $\delta_{\text{PHR}}$: le braquage du plan horizontal réglable (PHR)
+		\item $\delta_{el}$: le braquage de la gouverne de profondeur
+		\item $\delta_{th}$: la position de la manette de poussée
+	\end{itemize}
+	
+	Pour remplir ce cahier des charges, nous allons découper la commande de l'avion en trois sous-commandes distinctes:
+	\begin{itemize}
+		\item \textbf{La commande de l'assiette} pour laquelle on implémentera une commande classique ;
+		\item \textbf{La loi de descente} pour laquelle on implémentera une commande modale ;
+		\item \textbf{Les lois de maintien du niveau et de la vitesse} pour lesquelles on implémentera une commande optimale.
+	\end{itemize}
+	
+	%----------------------------------------------------------
+	\chapter{Modélisation et Linéarisation}
+	%----------------------------------------------------------
+	Avant de procéder à la synthèse des lois de commande, il est nécessaire de définir le modèle de l'avion et son point de fonctionnement.
+	
+	\section{Caractéristiques de l'avion}
+	L'avion étudié est un Airbus A320 (groupe Golf). Il est caractérisé par sa marge statique (\emph{ms}) et son coefficient de masse (\emph{km}). Le tableau suivant récapitule les paramètres de simulation :
+	
+	\begin{table}[H]
+		\centering	
+		\caption{Paramètres caractéristiques de l'A320 (Groupe Golf) \cite[Tab 2.1]{Sujet}}
+		\label{tab:parametres}
+		\begin{tabular}{l l}
+			\toprule
+			\textbf{Paramètre} & \textbf{Valeur} \\
+			\midrule
+			Marge statique (\emph{ms}) & $0.5$ \\
+			Coefficient de masse (\emph{km}) & $0.3$ \\
+			Niveau de vol initial (FL) & $150$ \\
+			Vitesse équivalente (\emph{EAS}) & \SI{260}{kts} \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\section{Point de fonctionnement (Trim)}
+	Conformément au scénario \textit{Open Descent} décrit dans le sujet \cite{Sujet}, la poussée est maintenue fixe sur la position \emph{Idle}. Le calcul du point d'équilibre (\textit{trim}) a été réalisé via la fonction \texttt{utComputeTrimIdle}. Pour l'avion assigné à l'équipe Golf, le point d'équilibre obtenu est :
+	\begin{itemize}
+		\item Altitude : \SI{15000}{ft} (\SI{4572}{m})
+		\item Vitesse vraie ($V_a$) : $\approx$ \SI{139}{m/s} (pour \SI{260}{kts} EAS)
+		\item Poussée : $\delta_{th} = 0.1$ (Idle)
+		\item Assiette ($\theta_{trim}$) et Incidence ($\alpha_{trim}$) : calculées pour assurer la portance.
+	\end{itemize}
+	
+	\section{Linéarisation}
+	La linéarisation du modèle non-linéaire autour de ce point de trim a été effectuée à l'aide de la commande \texttt{linmod} de Matlab. Cela nous a permis d'extraire le modèle d'état longitudinal réduit (matrices $A_4$, $B_4$) décrivant la dynamique des états $[V_a, \alpha, \theta, q]^T$ sous l'action de la gouverne de profondeur $\delta_{el}$.
+	
+	L'analyse des valeurs propres de la matrice $A_4$ met en évidence les modes naturels de l'avion :
+	\begin{itemize}
+		\item \textbf{Le mode phugoïde} : mode lent, peu amorti, caractérisé par un échange d'énergie cinétique et potentielle.
+		\item \textbf{L'oscillation d'incidence} : mode rapide et bien amorti.
+	\end{itemize}
+	
+	
+	%----------------------------------------------------------
+	\chapter{Commande de l'assiette (Boucle Interne)}
+	%----------------------------------------------------------
+	
+	Ce chapitre détaille la conception de la boucle interne de pilotage, dont l'objectif est d'asservir l'assiette longitudinale $\theta$ de l'avion via la gouverne de profondeur $\delta_{el}$ \cite{Sujet}.
+	
+	\section{Synthèse du correcteur}
+	Nous avons retenu une structure de commande classique de type PI-D (Proportionnel, Intégral, Dérivée sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang \cite{Sujet}\cite{Wang2009}.
+	
+	Conformément au cahier des charges, nous avons conservé les spécifications initiales pour la méthode de Wang, à savoir :
+	\begin{equation}
+		t_s = \SI{3}{s} \quad \text{et} \quad D = 5\%
+	\end{equation}
+	
+	Ce réglage permet de placer les pôles dominants de la boucle fermée interne afin de respecter les critères de performance temporelle et de dépassement demandés.
+	
+	La structure finale implémentée sous Simulink est présentée ci-dessous :
+	
+	\begin{figure}[H]
+		\centering
+		%\includegraphics[width=0.9\textwidth]{schema_boucle_interne.png} % Placeholder name
+		\caption{Schéma Simulink de la boucle de tenue d'assiette (Commande Classique)}
+		\label{fig:boucle_interne}
+	\end{figure}
+		
+	%----------------------------------------------------------
+	\chapter{Loi de descente (Open Descent)}
+	%----------------------------------------------------------
+	
+	L'objectif de la loi de descente est de maintenir une vitesse équivalente (\emph{EAS}) constante en agissant sur la consigne d'assiette $\theta_c$, la poussée restant figée à \emph{Idle} \cite{Sujet}.
+	
+	\section{Stratégie de commande modale}
+	Nous avons utilisé une commande par retour d'état calculée sur le système augmenté. Le système considéré pour cette synthèse est l'avion asservi en assiette (boucle fermée interne). Le vecteur d'état considéré est :
+	\begin{equation}
+		x = [V_a, \alpha, \theta, q, x_{pid}, x_{pf}]^T
+	\end{equation}
+	Où $x_{pid}$ et $x_{pf}$ sont les états internes du correcteur PI-D et du pré-filtre.
+	
+	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
+	Le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
+	Nous avons augmenté le système avec un état intégrateur $\xi$ défini par :
+	\begin{equation}
+		\dot{\xi} = \varepsilon = V_{\text{EAS},c} - V_{\text{EAS},m}
+	\end{equation}
+	Il est crucial de noter que l'intégrateur agit sur l'erreur d'\emph{EAS} (et non de TAS), car c'est la grandeur pilotée.
+	
+	\section{Placement des pôles}
+	La contrainte de conception impose que la partie réelle de tous les pôles en boucle fermée soit inférieure à \SI{-1.3}{rad/s} \cite[4.6]{Sujet}. En utilisant la fonction \texttt{place} de Matlab sur le système augmenté, nous avons imposé le vecteur de pôles suivant:
+	\begin{itemize}
+		\item \textbf{Pôles de la dynamique interne ($dp$)} : conservés depuis la boucle d'assiette. Avec un temps de réponse $t_s=\SI{3}{s}$, ils se situent à environ $-1.33 \pm 1.4i$.
+		\item \textbf{Pôle de l'intégrateur} : fixé à $-1.33$.
+		\item \textbf{Modes rapides de la boucle interne} : conservés vers $-3.4 \pm 0.15i$.
+		\item \textbf{Autres pôles} : repoussés vers la gauche à $-3$ et $-4$ pour ne pas interférer avec la dynamique dominante.
+	\end{itemize}
+	
+	Le choix du pôle intégrateur à $-1.33$ permet de satisfaire la spécification de stabilité ($\text{Re} < -1.3$)[cite: 804]. On note que la dynamique de l'intégrateur est du même ordre de grandeur que la dynamique de l'assiette ($1.33 \approx 1.33$), ce qui est une limite de cette configuration, mais nécessaire pour respecter les contraintes sans demander une dynamique irréaliste à l'actionneur.
+	
+	Le schéma complet de la boucle externe est illustré ci-dessous :
+	
+	\begin{figure}[H]
+		\centering
+		%\includegraphics[width=\textwidth]{schema_boucle_externe.png} % Placeholder
+		\caption{Schéma Simulink de la boucle de vitesse avec Intégrateur (Commande Modale)}
+		\label{fig:boucle_externe}
+	\end{figure}
+	
+	\section{Observateur d'état}
+	Pour implémenter cette loi de commande par retour d'état, nous devons connaître l'ensemble du vecteur d'état $x$. Or, certaines grandeurs comme l'incidence $\alpha$ ne sont pas toujours mesurées directement ou sont bruitées. Nous avons donc synthétisé un observateur d'état de Luenberger.
+	
+	Cet observateur utilise les entrées de commande et les trois sorties mesurées disponibles :
+	\begin{equation}
+		y_{mes} = [V_a, \theta, q]^T
+	\end{equation}
+	La matrice de gain $L$ de l'observateur a été calculée par placement de pôles (dualité avec la commande) pour assurer une convergence de l'erreur d'estimation vers zéro.
+	
+	\section{Résultats de simulation}
+	La validation sur le modèle non-linéaire (sur une durée de \SI{600}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure \ref{fig:resultat_vitesse} que la Vitesse Vraie (\emph{TAS}) diminue progressivement au cours de la descente pour maintenir une \emph{EAS} constante, validant la physique du vol.
+	
+	\begin{figure}[H]
+		\centering
+		%\includegraphics[width=0.8\textwidth]{resultat_vitesse.png} % Placeholder
+		\caption{Évolution de la Vitesse Vraie (TAS) lors de la descente à EAS constante}
+		\label{fig:resultat_vitesse}
+	\end{figure}
+	
+	%----------------------------------------------------------
+	\chapter{Lois de maintien du niveau et de la vitesse}
+	%----------------------------------------------------------
+	
+	Pour la phase de croisière et d'approche, l'avion doit maintenir simultanément son altitude et sa vitesse. Il s'agit d'un problème multi-variable (MIMO).
+	
+	\section{Commande Optimale (LQT)}
+	Nous avons implémenté une commande optimale de type LQT (\textit{Linear Quadratic Tracker}) \cite{Sujet}. Cette méthode permet de calculer un gain de retour d'état $K$ et une précommande variable assurant le suivi de trajectoire (pente nulle, vitesse constante) tout en minimisant un critère quadratique sur les écarts et l'énergie de commande.
+	
+	\textit{[Insérer ici les résultats de la commande optimale, les courbes de suivi de pente et de vitesse]}
+	
+	
+	%----------------------------------------------------------
+	\chapter{Conclusion}
+	%----------------------------------------------------------
+	Ce projet nous a permis de synthétiser et valider une architecture de pilotage automatique complète pour la phase de descente d'un A320.
+	%----------------------------------------------------------
+	\chapter{Annexes}
+	%----------------------------------------------------------
+	
+	%----------------------------------------------------------
+\end{document}
