@@ -85,3 +85,4 @@ codegen/
 *.out.ps
 *.run.xml
 *.lot
+*.synctex(busy)
