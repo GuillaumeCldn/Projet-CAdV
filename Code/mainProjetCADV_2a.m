@@ -157,6 +157,9 @@ Cobs = [C6(1,:); C6(3,:); C6(4,:)];
 obs = rank(obsv(A6,Cobs))
 ctr = rank(ctrb(A6,B6))
 
-L6t = place(A6', Cobs', [dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6]);
+L6t = place(A6', Cobs', poles_desires(1:6));
 L6 = L6t';
 eig(A6-L6*Cobs);
+
+
+
