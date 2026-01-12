@@ -141,7 +141,7 @@ end
 
 % Calcul des gains sur le système augmenté (taille 7)
 % On ajoute un pôle pour l'intégrateur
-poles_desires = [dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -3, -4, -1.33];
+poles_desires = [dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -3, -4, -10.33];
 
 K_aug = place(A_aug, B_aug, poles_desires);
 
