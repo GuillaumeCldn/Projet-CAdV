@@ -120,7 +120,9 @@ B6 = Bcm(iVa:end);
 C6 = Ccm(iVa:end, iVa:end);
 C6_pour_h = Ccm(iVa, iVa:end);
 pA6 = eig(A6);
-K6 = place(A6,B6,[dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6]);
+K6 = place(A6,B6,[dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6]); % On a observé les pôles (-3.3965 + 0.1541i, -3.3965 - 0.1541i) dans eig
+% On se contente de les conserver ici, pour soulager les actionneurs.
+% Inutile de lutter contre ces derniers.
 
 % On doit identifier quelle ligne de C6 correspond à Va pour l'intégrateur
 % Dans A6, l'ordre est [Va, alpha, theta, q, ...]. Donc Va est le 1er état.

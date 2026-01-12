@@ -146,11 +146,28 @@ font=\normalfont\large\bfseries]{subsection}
 	\section{Linéarisation}
 	La linéarisation du modèle non-linéaire autour de ce point de trim a été effectuée à l'aide de la commande \texttt{linmod} de Matlab. Cela nous a permis d'extraire le modèle d'état longitudinal réduit (matrices $A_4$, $B_4$) décrivant la dynamique des états $[V_a, \alpha, \theta, q]^T$ sous l'action de la gouverne de profondeur $\delta_{el}$.
 	
-	L'analyse des valeurs propres de la matrice $A_4$ met en évidence les modes naturels de l'avion :
+	L'analyse des valeurs propres de la matrice $A_4$ (obtenues via la commande \texttt{damp(A4)}) met en évidence les deux modes longitudinaux classiques :
+	
 	\begin{itemize}
-		\item \textbf{Le mode phugoïde} : mode lent, peu amorti, caractérisé par un échange d'énergie cinétique et potentielle.
-		\item \textbf{L'oscillation d'incidence} : mode rapide et bien amorti.
+		\item \textbf{Le mode phugoïde} : mode lent caractérisé par une pulsation naturelle $\omega_n = \SI{0.0721}{rad/s}$ et un amortissement faible $\zeta = 0.1267$.
+		\item \textbf{L'oscillation d'incidence} : mode rapide caractérisé par une pulsation naturelle $\omega_n = \SI{2.8896}{rad/s}$ et un amortissement plus important $\zeta = 0.5167$.
 	\end{itemize}
+	
+	Ces résultats sont résumés dans le tableau suivant :
+	
+	\begin{table}[H]
+		\centering
+		\caption{Analyse modale du modèle longitudinal linéarisé au trim}
+		\label{tab:modes_propres}
+		\begin{tabular}{l S S}
+			\toprule
+			\textbf{Mode} & {\textbf{Amortissement} ($\zeta$)} & {\textbf{Pulsation} ($\omega_n$ [\si{rad/s}])} \\
+			\midrule
+			Phugoïde & 0.1267 & 0.0721 \\
+			Oscillation d'incidence & 0.5167 & 2.8896 \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
 	
 	
 	%----------------------------------------------------------
@@ -169,37 +186,48 @@ font=\normalfont\large\bfseries]{subsection}
 	
 	Ce réglage permet de placer les pôles dominants de la boucle fermée interne afin de respecter les critères de performance temporelle et de dépassement demandés.
 	
-	La structure du système linéaire implémentée sous Simulink est présentée ci-dessous :
+	\section{Implémentation et Validation}
 	
-	\begin{figure}[H]
+	Les structures de commande ont été implémentées sous Simulink pour le modèle linéarisé (servant à la synthèse) et le modèle non-linéaire complet (servant à la validation).
+	
+	\begin{figure}[htbp] 
 		\centering
-		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_assiette.png}}
-		\caption{Schéma Simulink de la boucle de tenue d'assiette (Système linéarisé)}
-		\label{fig:boucle_interne}
+		\begin{subfigure}[b]{0.85\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{schema_lineaire_assiette.png}
+			\caption{Système linéarisé}
+		\end{subfigure}
+		
+		\par\bigskip 
+		
+		\begin{subfigure}[b]{0.85\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{schema_classique.png}
+			\caption{Système non-linéaire (Avion naturel)}
+		\end{subfigure}
+		
+		\vspace{-0.5em} 
+		\caption{Schémas Simulink de la boucle de tenue d'assiette}
+		\label{fig:schemas_assiette}
 	\end{figure}
 	
-	\pagebreak
+	Afin de valider la synthèse et la qualité de la linéarisation, nous avons superposé la réponse indicielle des deux modèles pour un échelon de consigne de \SI{5}{\degree} partant du point de trim.
 	
-	
-	On observe dans le cadre du système linéarisé cette réponse à une consigne de 5°, le système partant du point de trim.
-	
-	\begin{figure}[H]
+	\begin{figure}[htbp]
 		\centering
-		\makebox[\textwidth][c]{\includegraphics[width=0.9\textwidth]{reponse_lineaire_assiette.png}}
-		\caption{Réponse du linéarisé à une consigne de 5°}
-		\label{fig:reponse_lineaire_assiette}
+		\includegraphics[width=0.95\textwidth, trim={1cm 0.5cm 1cm 1cm}, clip]{reponse_bilineaire_assiette.png}
+		\vspace{-1em} 
+		\caption{Comparaison des réponses indicielles (Linéaire vs Non-linéaire)}
+		\label{fig:reponse_bilineaire_assiette}
 	\end{figure}
 	
-	On constate que les spécifications énoncées en dépassement et en temps de réponse sont respectées.
+	L'analyse de la figure \ref{fig:reponse_bilineaire_assiette} suggère deux commentaires majeurs :
+	\begin{enumerate}
+		\item \textbf{Respect des spécifications :} Le temps de réponse à 5\% est bien de l'ordre de 3 secondes et le dépassement correspond aux 5\% attendus (pic à $\approx \SI{5.25}{\degree}$).
+		\item \textbf{Validité du modèle :} Les courbes rouge (modèle linéaire) et bleue (modèle non-linéaire) sont parfaitement superposées. Cela confirme que pour des amplitudes faibles (voisines de 5°), la linéarisation autour du point de trim est une excellente approximation de la dynamique réelle de l'avion.
+	\end{enumerate}
 	
-	On implémente ensuite ce système dans le cadre non-linéaire. Voici le schéma Simulink le présentant:
 	
-	\begin{figure}[H]
-		\centering
-		\makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{schema_classique.png}}
-		\caption{Schéma Simulink de la boucle de tenue d'assiette (Système non-linéaire)}
-		\label{fig:boucle_interne_nonlineaire}
-	\end{figure}
 		
 	%----------------------------------------------------------
 	\chapter{Loi de descente (Open Descent)}
@@ -208,11 +236,17 @@ font=\normalfont\large\bfseries]{subsection}
 	L'objectif de la loi de descente est de maintenir une vitesse équivalente (\emph{EAS}) constante en agissant sur la consigne d'assiette $\theta_c$, la poussée restant figée à \emph{Idle} \cite{Sujet}.
 	
 	\section{Stratégie de commande modale}
-	Nous avons utilisé une commande par retour d'état calculée sur le système augmenté. Le système considéré pour cette synthèse est l'avion asservi en assiette (boucle fermée interne). Le vecteur d'état considéré est :
+	La linéarisation est effectuée sur le modèle Simulink \texttt{acDynModelGolfTenueClassique}, qui inclut déjà la boucle interne d'assiette. Le système linéarisé $A_6$ est donc d'ordre 6 et correspond au vecteur d'état suivant :
 	\begin{equation}
 		x = [V_a, \alpha, \theta, q, x_{pid}, x_{pf}]^T
 	\end{equation}
-	Où $x_{pid}$ et $x_{pf}$ sont les états internes du correcteur PI-D et du pré-filtre.
+	Où $x_{pid}$ et $x_{pf}$ sont les états internes du correcteur PI-D et du pré-filtre de la boucle interne.
+	
+	Afin d'annuler l'erreur statique, nous avons augmenté ce système avec un état intégrateur $\xi$ agissant sur l'erreur de vitesse équivalente :
+	\begin{equation}
+		\dot{\xi} = V_{EAS,cons} - V_{EAS,mes}
+	\end{equation}
+	La commandabilité du système augmenté a été vérifiée via le rang de la matrice de commandabilité (\texttt{ctrb}).
 	
 	\begin{figure}[H]
 		\centering
@@ -230,15 +264,14 @@ font=\normalfont\large\bfseries]{subsection}
 	Il est crucial de noter que l'intégrateur agit sur l'erreur d'\emph{EAS} (et non de TAS), car c'est la grandeur pilotée.
 	
 	\section{Placement des pôles}
-	La contrainte de conception impose que la partie réelle de tous les pôles en boucle fermée soit inférieure à \SI{-1.3}{rad/s} \cite[4.6]{Sujet}. En utilisant la fonction \texttt{place} de Matlab sur le système augmenté, nous avons imposé le vecteur de pôles suivant:
+	Pour calculer le gain $K_{aug}$ du système augmenté, nous avons utilisé la commande \texttt{place} avec les pôles désirés suivants :
 	\begin{itemize}
-		\item \textbf{Pôles de la dynamique interne ($dp$)} : conservés depuis la boucle d'assiette. Avec un temps de réponse $t_s=\SI{3}{s}$, ils se situent à environ $-1.33 \pm 1.4i$.
-		\item \textbf{Pôle de l'intégrateur} : fixé à $-1.33$.
-		\item \textbf{Modes rapides de la boucle interne} : conservés vers $-3.4 \pm 0.15i$.
-		\item \textbf{Autres pôles} : repoussés vers la gauche à $-3$ et $-4$ pour ne pas interférer avec la dynamique dominante.
+		\item \textbf{Dynamique dominante ($dp$)} : Conservée de la méthode de Wang (boucle interne).
+		\item \textbf{Modes rapides} : Pôles complexes conjugués conservés vers $-3.4 \pm 0.15i$ (observés dans la matrice $A_6$ via \texttt{eig}). Nous avons choisi de ne pas modifier ces modes naturels pour éviter de solliciter inutilement les actionneurs.
+		\item \textbf{Pôles réels de réglage} : Fixés à $-3$ et $-4$.
+		\item \textbf{Pôle de l'intégrateur} : Fixé à $-10.33$.
 	\end{itemize}
-	
-	Le choix du pôle intégrateur à $-1.33$ permet de satisfaire la spécification de stabilité ($\text{Re} < -1.3$)\cite{Sujet}. On note que la dynamique de l'intégrateur est du même ordre de grandeur que la dynamique de l'assiette ($1.33 \approx 1.33$), ce qui est une limite de cette configuration, mais nécessaire pour respecter les contraintes sans demander une dynamique irréaliste à l'actionneur.
+	Ce choix d'un pôle intégrateur rapide ($-10.33$) assure une élimination rapide de l'erreur statique, bien au-delà de la contrainte de stabilité imposée ($\text{Re} < -1.3$).
 	
 	Le schéma complet de la boucle externe est illustré ci-dessous :
 	
@@ -250,13 +283,19 @@ font=\normalfont\large\bfseries]{subsection}
 	\end{figure}
 	
 	\section{Observateur d'état}
-	Pour implémenter cette loi de commande par retour d'état, nous devons connaître l'ensemble du vecteur d'état $x$. Or, certaines grandeurs comme l'incidence $\alpha$ ne sont pas toujours mesurées directement ou sont bruitées. Nous avons donc synthétisé un observateur d'état de Luenberger.
+	Pour implémenter cette loi de commande par retour d'état, nous devons connaître l'ensemble du vecteur d'état $x$. Or, certaines grandeurs comme l'incidence $\alpha$ ne sont pas toujours mesurées directement ou sont bruitées.
 	
-	Cet observateur utilise les entrées de commande et les trois sorties mesurées disponibles :
+	Pour reconstruire le vecteur d'état complet, nous utilisons un observateur de Luenberger défini par :
 	\begin{equation}
-		y_{\text{mes}} = [V_a, \theta, q]^T
+		\dot{\hat{x}} = A \hat{x} + B u + L (y_{\text{mes}} - C \hat{x})
 	\end{equation}
-	La matrice de gain $L$ de l'observateur a été calculée par placement de pôles (dualité avec la commande) pour assurer une convergence de l'erreur d'estimation vers zéro.
+	Où $\hat{x}$ est l'état estimé et $L$ la matrice de gain de l'observateur. Cet observateur est synthétisé en utilisant les trois sorties mesurées disponibles définies dans la matrice $C_{obs}$ :
+	\begin{equation}
+		y_{mes} = [V_a, \theta, q]^T
+	\end{equation}
+	L'observabilité de la paire $(A_6, C_{obs})$ a été validée (rang plein).
+	
+	Pour le calcul du gain $L$, bien que la théorie suggère généralement une dynamique d'erreur d'estimation plus rapide que celle de la commande, nous avons choisi de placer les pôles de l'observateur sur les mêmes dynamiques que celles du système en boucle fermée (vecteur \texttt{poles\_desires(1:6)}). Ce choix vise à limiter l'amplification du bruit de mesure sur les états estimés, notamment sur l'incidence $\alpha$. D'après les tests effectués, ce réglage s'est avéré satisfaisant pour notre application et une dynamique plus rapide n'a pas semblé nécessaire.
 	
 	\section{Résultats de simulation}
 	La validation sur le modèle non-linéaire (sur une durée de \SI{600}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure \ref{fig:resultat_vitesse} que la Vitesse Vraie (\emph{TAS}) diminue progressivement au cours de la descente pour maintenir une \emph{EAS} constante, validant la physique du vol.
@@ -272,21 +311,53 @@ font=\normalfont\large\bfseries]{subsection}
 	\chapter{Lois de maintien du niveau et de la vitesse}
 	%----------------------------------------------------------
 	
-	Pour la phase de croisière et d'approche, l'avion doit maintenir simultanément son altitude et sa vitesse. Il s'agit d'un problème multi-variable (MIMO).
+	Pour la phase de stabilisation au niveau 30, l'avion doit maintenir simultanément son altitude et sa vitesse aérodynamique de \SI{230}{kts}. Il s'agit d'un problème multi-variable (MIMO) où la poussée $\delta_{thr}$ et la profondeur $\delta_{el}$ sont utilisées conjointement.
 	
-	\section{Commande Optimale (LQT)}
-	Nous avons implémenté une commande optimale de type LQT (\textit{Linear Quadratic Tracker}) \cite{Sujet}. Cette méthode permet de calculer un gain de retour d'état $K$ et une précommande variable assurant le suivi de trajectoire (pente nulle, vitesse constante) tout en minimisant un critère quadratique sur les écarts et l'énergie de commande.
+	\section{Synthèse par commande optimale (LQT)}
+	Nous avons implémenté une structure \textit{Linear Quadratic Tracker} (LQT) pour minimiser l'erreur de suivi entre la sortie du système $y$ et un modèle de référence $y_r$. Le critère à minimiser est défini par :
+	\begin{equation}
+		J = \frac{1}{2} \int_{0}^{\infty} (e^T Q e + \tilde{u}^T R \tilde{u}) dt
+	\end{equation}
+	Où $Q$ et $R$ sont les matrices de pondération permettant de régler le compromis entre précision du suivi et énergie de commande.
 	
-	\textit{[Insérer ici les résultats de la commande optimale, les courbes de suivi de pente et de vitesse]}
+	\section{Réglage des matrices de pondération}
+	Pour respecter les spécifications (temps de réponse $< \SI{20}{s}$ pour $V_a$ et $< \SI{2}{s}$ pour la pente, sans dépassement), nous avons choisi :
+	\begin{itemize}
+		\item \textbf{Matrice $Q$} : Une pondération forte a été placée sur l'erreur de pente pour garantir la réactivité de la boucle d'altitude.
+		\item \textbf{Matrice $R$} : Les coefficients ont été ajustés pour éviter des sollicitations brutales des moteurs (limitation de la fatigue) et des gouvernes.
+	\end{itemize}
 	
+	
+	
+	\section{Analyse du couplage}
+	Contrairement aux lois SISO précédentes, la commande optimale LQT permet un \textbf{découplage} partiel des axes. Une variation de consigne de vitesse est compensée par une action combinée sur la poussée (action directe) et sur la profondeur (pour contrer le moment cabreur induit par les moteurs).
+	
+	
+	%----------------------------------------------------------
+	\chapter{Simulation du scénario complet}
+	%----------------------------------------------------------
+	
+	\section{Gestion de la transition}
+	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition est déclenchée lors de la capture de l'altitude cible (\SI{3000}{ft}). 
+	
+	\section{Analyse des résultats globaux}
+	La simulation complète montre une descente fluide à \SI{260}{kts} EAS. Lors de l'approche du FL30 :
+	\begin{enumerate}
+		\item La loi de capture d'altitude réduit la pente.
+		\item La manette des gaz sort de la position \textit{Idle} pour maintenir la vitesse.
+		\item L'avion se stabilise aux nouvelles consignes sans dépassement excessif, validant la robustesse des correcteurs sur le modèle non-linéaire.
+	\end{enumerate}
 	
 	%----------------------------------------------------------
 	\chapter{Conclusion}
 	%----------------------------------------------------------
-	Ce projet nous a permis de synthétiser et valider une architecture de pilotage automatique complète pour la phase de descente d'un A320.
-	%----------------------------------------------------------
-	\chapter{Annexes}
-	%----------------------------------------------------------
 	
-	%----------------------------------------------------------
+	Ce projet a permis de valider une architecture de pilotage automatique complète. Nous avons pu observer que :
+	\begin{itemize}
+		\item La linéarisation est un outil puissant mais nécessite l'ajout d'intégrateurs pour compenser les dérives du modèle non-linéaire en cours de descente.
+		\item La commande optimale MIMO offre une bien meilleure gestion des interactions entre les axes que la simple juxtaposition de boucles SISO.
+	\end{itemize}
+	
+	\paragraph{Limites et perspectives} 
+	Pour améliorer le réalisme, il serait nécessaire d'intégrer des saturations sur les vitesses de déflexion des gouvernes (\SI{15}{\degree/s} pour la profondeur) et de prendre en compte la dynamique plus lente du PHR par rapport à la gouverne de profondeur.
 \end{document}
