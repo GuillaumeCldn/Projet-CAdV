@@ -173,7 +173,7 @@ font=\normalfont\large\bfseries]{subsection}
 	
 	\begin{figure}[H]
 		\centering
-		%\includegraphics[width=0.9\textwidth]{schema_boucle_interne.png} % Placeholder name
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_classique.png}}
 		\caption{Schéma Simulink de la boucle de tenue d'assiette (Commande Classique)}
 		\label{fig:boucle_interne}
 	\end{figure}
@@ -190,6 +190,13 @@ font=\normalfont\large\bfseries]{subsection}
 		x = [V_a, \alpha, \theta, q, x_{pid}, x_{pf}]^T
 	\end{equation}
 	Où $x_{pid}$ et $x_{pf}$ sont les états internes du correcteur PI-D et du pré-filtre.
+	
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_prefiltre.png}}
+		\caption{Schéma Simulink de descente avec préfiltre H}
+		\label{fig:modale_prefiltre}
+	\end{figure}
 	
 	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
 	Le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
