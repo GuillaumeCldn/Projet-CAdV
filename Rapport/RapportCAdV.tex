@@ -169,13 +169,36 @@ font=\normalfont\large\bfseries]{subsection}
 	
 	Ce réglage permet de placer les pôles dominants de la boucle fermée interne afin de respecter les critères de performance temporelle et de dépassement demandés.
 	
-	La structure finale implémentée sous Simulink est présentée ci-dessous :
+	La structure du système linéaire implémentée sous Simulink est présentée ci-dessous :
 	
 	\begin{figure}[H]
 		\centering
-		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_classique.png}}
-		\caption{Schéma Simulink de la boucle de tenue d'assiette (Commande Classique)}
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_assiette.png}}
+		\caption{Schéma Simulink de la boucle de tenue d'assiette (Système linéarisé)}
 		\label{fig:boucle_interne}
+	\end{figure}
+	
+	\pagebreak
+	
+	
+	On observe dans le cadre du système linéarisé cette réponse à une consigne de 5°, le système partant du point de trim.
+	
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=0.9\textwidth]{reponse_lineaire_assiette.png}}
+		\caption{Réponse du linéarisé à une consigne de 5°}
+		\label{fig:reponse_lineaire_assiette}
+	\end{figure}
+	
+	On constate que les spécifications énoncées en dépassement et en temps de réponse sont respectées.
+	
+	On implémente ensuite ce système dans le cadre non-linéaire. Voici le schéma Simulink le présentant:
+	
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1.1\textwidth]{schema_classique.png}}
+		\caption{Schéma Simulink de la boucle de tenue d'assiette (Système non-linéaire)}
+		\label{fig:boucle_interne_nonlineaire}
 	\end{figure}
 		
 	%----------------------------------------------------------
