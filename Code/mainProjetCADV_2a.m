@@ -72,11 +72,12 @@ state4 = tf(state4num, state4den);
 modes4 = eig(A4);
 [Wn, zeta] = damp(A4);
 % Nom des modes ? Deux pôles normaux et deux pôles très lents, principalement oscillatoires ? 
+% Mode phugoïde
 
 % Specifications 
 ts = 3; % secondes
-D = 0.05; % %
-[Kp, Ki, Kd, m, w0, dp] = utWang(state4, ts, D, -5.66); % On prend Kp = - 5.66
+D = 0.05; %
+[Kp, Ki, Kd, m, w0, dp] = utWang(state4, ts, D, -5.66); % On prend Kp = - 5.66, par lecture du root locus
 
 % Préfiltre
 FTBF_in = feedback(state4, tf([Kp, 0], 1)); % Fonction de transfert 'interne'
