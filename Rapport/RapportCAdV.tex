@@ -245,42 +245,22 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 
 	La commande modale consite à choisir les pôles du système bouclé pour influencer le comportement de ses modes. La fonction MatLab \texttt{place} permet de calculer le gain du retour d'état qui sera utilisé pour commander le système (on note ce gain $K_x$).
 
-	Le retour d'état seul ne permet pas de commander le système, on ajoute une précommande pour adapter la commande au retour d'état. L'architecture de commande du système est illustrée ci-dessous:
+	Le retour d'état seul ne permet pas de commander le système, on ajoute une précommande pour adapter la commande au retour d'état. La précommande est calculée ainsi \cite[eq. 3.50]{Sujet}:
+
+	\begin{equation}
+		H = -(C \cdot (A-B K)^{-1}\cdot B)^{-1} 
+	\end{equation}
+	\pagebreak
+
+	L'architecture de commande du système est illustrée ci-dessous:
 
 	\begin{figure}[H]
 		\centering
 		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_modale_prefiltre.png}}
-		\caption{Schéma Simulink de descente avec préfiltre H}
+		\caption{Schéma Simulink de la commande avec préfiltre $H$}
 		\label{fig:modale_prefiltre}
 	\end{figure}
 
-	\section{Placement des pôles}
-	Pour calculer le gain $K_{aug}$ du système augmenté, nous avons utilisé la commande \texttt{place} avec les pôles désirés suivants :
-	\begin{itemize}
-		\item \textbf{Dynamique dominante ($dp$)} : Conservée de la méthode de Wang (boucle interne).
-		\item \textbf{Modes rapides} : Pôles complexes conjugués conservés vers $-3.4 \pm 0.15i$ (observés dans la matrice $A_6$ via \texttt{eig}). Nous avons choisi de ne pas modifier ces modes naturels pour éviter de solliciter inutilement les actionneurs.
-		\item \textbf{Pôles réels de réglage} : Fixés à $-3$ et $-4$.
-		\item \textbf{Pôle de l'intégrateur} : Fixé à $-10.33$.
-	\end{itemize}
-	Ce choix d'un pôle intégrateur rapide ($-10.33$) assure une élimination rapide de l'erreur statique, bien au-delà de la contrainte de stabilité imposée ($\text{Re} < -1.3$).
-	
-	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
-	Le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite[3.6.2]{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
-	Nous avons augmenté le système avec un état intégrateur $\xi$ défini par :
-	\begin{equation}
-		\dot{\xi} = V_{\text{EAS,cons}} - V_{\text{EAS,mes}}
-	\end{equation}
-	Il est crucial de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
-	
-	Le schéma de la commande modale avec intégrateur appliquée au système linéaire est illustrée ci-dessous:
-
-	\begin{figure}[H]
-		\centering
-		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_modale.png}}
-		\caption{Schéma Simulink de la boucle de vitesse avec intégrateur sur le système linéaire}
-		\label{fig:schema_lineaire_modale}
-	\end{figure}
-	
 	\section{Observateur d'état}
 	Pour implémenter cette loi de commande par retour d'état, nous devons connaître l'ensemble du vecteur d'état $x$. Or, certaines grandeurs comme l'incidence $\alpha$ ne sont pas toujours mesurées directement ou sont bruitées.
 	
@@ -295,6 +275,43 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	L'observabilité de la paire $(A_6, C_{\text{obs}})$ a été validée (rang plein).
 	
 	Pour le calcul du gain $L$, bien que la théorie suggère généralement une dynamique d'erreur d'estimation plus rapide que celle de la commande, nous avons choisi de placer les pôles de l'observateur sur les mêmes dynamiques que celles du système en boucle fermée (vecteur \texttt{poles\_desires(1:6)}). Ce choix vise à limiter l'amplification du bruit de mesure sur les états estimés, notamment sur l'incidence $\alpha$. D'après les tests effectués, ce réglage s'est avéré satisfaisant pour notre application et une dynamique plus rapide n'a pas semblé nécessaire.
+
+	\section{Choix des pôles}
+	Pour calculer le gain du retour d'état, nous avons choisi les pôles suivants :
+	\begin{itemize}
+		\item \textbf{Dynamique dominante ($dp$)} : Conservée de la méthode de Wang (boucle interne).
+		\item \textbf{Modes rapides} : Pôles complexes conjugués conservés vers $-3.4 \pm 0.15i$ (observés dans la matrice $A_6$ via la fonction MatLab \texttt{eig}). Nous avons choisi de ne pas modifier ces modes naturels pour éviter de solliciter inutilement les actionneurs.
+		\item \textbf{Pôles réels de réglage} : Fixés à $-3$ et $-4$.
+	\end{itemize}
+	
+	\begin{figure}[H]
+		\centering
+		%\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{reponse_lineaire_modale_prefiltre.png}}
+		\caption{Réponse de la commande modale à une consigne en échelon}
+		\label{fig:reponse_modale_prefiltre}
+	\end{figure}
+	
+	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
+	Pour pallier les limitations de la précommande seule, le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite[3.6.2]{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
+	Nous avons donc augmenté le système avec un état intégrateur $\xi$ défini par :
+	\begin{equation}
+		\dot{\xi} = V_{\text{EAS,cons}} - V_{\text{EAS,mes}}
+	\end{equation}
+	Il est crucial de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
+
+	On choisit pour l'intégrateur un pôle à $-10.33$, ce qui assure une élimination rapide de l'erreur statique, et vérifie la contrainte de stabilité imposée ($\text{Re} < -1.3$).
+
+	\pagebreak
+
+	Le schéma de la commande modale avec intégrateur appliquée au système linéaire est illustrée ci-dessous:
+
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_modale.png}}
+		\caption{Schéma Simulink de la boucle de vitesse avec intégrateur sur le système linéaire}
+		\label{fig:schema_lineaire_modale}
+	\end{figure}
+	
 	
 	\section{Résultats de simulation}
 	La validation sur le modèle non-linéaire (sur une durée de \SI{600}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure \ref{fig:resultat_vitesse} que la Vitesse Vraie (\emph{TAS}) diminue progressivement au cours de la descente pour maintenir une \emph{EAS} constante, validant la physique du vol.
