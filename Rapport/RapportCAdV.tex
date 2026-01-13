@@ -283,14 +283,19 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 		\item \textbf{Modes rapides} : Pôles complexes conjugués conservés vers $-3.4 \pm 0.15i$ (observés dans la matrice $A_6$ via la fonction MatLab \texttt{eig}). Nous avons choisi de ne pas modifier ces modes naturels pour éviter de solliciter inutilement les actionneurs.
 		\item \textbf{Pôles réels de réglage} : Fixés à $-3$ et $-4$.
 	\end{itemize}
+
+	La simulation de la commande modale donne le résultat suivant:
 	
 	\begin{figure}[H]
 		\centering
-		%\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{reponse_lineaire_modale_prefiltre.png}}
-		\caption{Réponse de la commande modale à une consigne en échelon}
+		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_lineaire_modale_prefiltre.png}}
+		\caption{Réponse de la commande modale à une consigne en échelon d'amplitude 3}
 		\label{fig:reponse_modale_prefiltre}
 	\end{figure}
-	
+
+% TODO: Détailler
+	La réponse de cette commande n'est pas du tout satisfaisante: l'erreur statique est de l'ordre de $2.42$.
+
 	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
 	Pour pallier les limitations de la précommande seule, le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite[3.6.2]{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
 	Nous avons donc augmenté le système avec un état intégrateur $\xi$ défini par :
@@ -301,8 +306,6 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 
 	On choisit pour l'intégrateur un pôle à $-10.33$, ce qui assure une élimination rapide de l'erreur statique, et vérifie la contrainte de stabilité imposée ($\text{Re} < -1.3$).
 
-	\pagebreak
-
 	Le schéma de la commande modale avec intégrateur appliquée au système linéaire est illustrée ci-dessous:
 
 	\begin{figure}[H]
@@ -312,14 +315,14 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 		\label{fig:schema_lineaire_modale}
 	\end{figure}
 	
-	La simulation de la commande modale donne les résultats suivants:
+	La simulation de la commande modale avec intégrateur donne le résultat suivants:
 	\begin{figure}[H]
 		\centering
-		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{reponse_lineaire_modale_integrateur.png}}
+		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_lineaire_modale_integrateur.png}}
 		\caption{Réponse de la commande modale à une consigne en échelon d'amplitude 3}
 		\label{fig:reponse_modale_integrateur}
 	\end{figure}
-	
+
 	\section{Résultats de simulation}
 	La validation sur le modèle non-linéaire (sur une durée de \SI{600}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure \ref{fig:resultat_vitesse} que la Vitesse Vraie (\emph{TAS}) diminue progressivement au cours de la descente pour maintenir une \emph{EAS} constante, validant la physique du vol.
 
