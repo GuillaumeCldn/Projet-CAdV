@@ -164,5 +164,17 @@ L6t = place(A6', Cobs', poles_desires(1:6));
 L6 = L6t';
 eig(A6-L6*Cobs);
 
+%% Commande Optimale/MIMO
+
+taero = 20; %secondes pour capture vitesse aérodynamique
+Daero = 0; %dépassement à la réponse indicielle
+
+tpente = 2; %temps de réponse en boucle fermée
+Daero = 0; %dépassement à la réponse indicielle
+
+%linéarisation en palier
+hTrimLF = 30*FL2M; % m
+VaTrimLF = utEas2Tas(230*KTS2MS, hTrimLF); % m/s, 230 depuis la consigne
+trimVal = utComputeTrimLevelFlight(hTrim,VaTrim,aircraftChosen,km,ms); %trim thrust idle (valeur trim, alpha, dthr)
 
 
