@@ -100,7 +100,7 @@ font=\normalfont\large\bfseries]{subsection}
 	\begin{itemize}
 		\item $\delta_{\text{PHR}}$: le braquage du plan horizontal réglable (PHR)
 		\item $\delta_{el}$: le braquage de la gouverne de profondeur
-		\item $\delta_{th}$: la position de la manette de poussée
+		\item $\delta_{\text{THR}}$: la position de la manette de poussée
 	\end{itemize}
 	
 	Pour remplir ce cahier des charges, nous allons découper la commande de l'avion en trois sous-commandes distinctes:
@@ -139,7 +139,7 @@ font=\normalfont\large\bfseries]{subsection}
 	\begin{itemize}
 		\item Altitude : \SI{15000}{ft} (\SI{4572}{m})
 		\item Vitesse vraie ($V_a$) : $\approx$ \SI{139}{m/s} (pour \SI{260}{kts} EAS)
-		\item Poussée : $\delta_{th} = 0.1$ (Idle)
+		\item Poussée : $\delta_{\text{THR}} = 0.1$ (Idle)
 		\item Assiette ($\theta_{trim}$) et Incidence ($\alpha_{trim}$) : calculées pour assurer la portance.
 	\end{itemize}
 	
@@ -174,10 +174,10 @@ font=\normalfont\large\bfseries]{subsection}
 	\chapter{Commande de l'assiette (Boucle Interne)}
 	%----------------------------------------------------------
 	
-	Ce chapitre détaille la conception de la boucle interne de pilotage, dont l'objectif est d'asservir l'assiette longitudinale $\theta$ de l'avion via la gouverne de profondeur $\delta_{el}$ \cite{Sujet}.
+	Ce chapitre détaille la conception de la boucle interne de pilotage, dont l'objectif est d'asservir l'assiette longitudinale $\theta$ de l'avion via la gouverne de profondeur $\delta_{el}$ \cite[4.5]{Sujet}.
 	
 	\section{Synthèse du correcteur}
-	Nous avons retenu une structure de commande classique de type PI-D (Proportionnel, Intégral, Dérivée sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang \cite{Sujet}\cite{Wang2009}.
+Nous avons retenu une structure de commande classique de type PI-D (Proportionnel Intégral, Dérivée sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang, présentée dans le sujet au paragraphe 3.5.1 du sujet \cite{Sujet} et dans l'article de \emph{Wang et al.} \cite{Wang2009}.
 	
 	Conformément au cahier des charges, nous avons conservé les spécifications initiales pour la méthode de Wang, à savoir :
 	\begin{equation}
@@ -211,7 +211,7 @@ font=\normalfont\large\bfseries]{subsection}
 		\label{fig:schemas_assiette}
 	\end{figure}
 	
-	Afin de valider la synthèse et la qualité de la linéarisation, nous avons superposé la réponse indicielle des deux modèles pour un échelon de consigne de \SI{5}{\degree} partant du point de trim.
+	Afin de valider la synthèse et la qualité de la linéarisation, nous avons superposé la réponse indicielle des deux modèles pour une consigne en échelon d'amplitude \SI{5}{\degree} partant du point de trim.
 	
 	\begin{figure}[htbp]
 		\centering
@@ -233,19 +233,14 @@ font=\normalfont\large\bfseries]{subsection}
 	\chapter{Loi de descente (Open Descent)}
 	%----------------------------------------------------------
 	
-	L'objectif de la loi de descente est de maintenir une vitesse équivalente (\emph{EAS}) constante en agissant sur la consigne d'assiette $\theta_c$, la poussée restant figée à \emph{Idle} \cite{Sujet}.
+	L'objectif de la loi de descente est de maintenir une vitesse équivalente (EAS) constante en agissant sur la consigne d'assiette $\theta_c$, la poussée restant figée à \emph{Idle} \cite[4.6]{Sujet}.
 	
 	\section{Stratégie de commande modale}
 	La linéarisation est effectuée sur le modèle Simulink \texttt{acDynModelGolfTenueClassique}, qui inclut déjà la boucle interne d'assiette. Le système linéarisé $A_6$ est donc d'ordre 6 et correspond au vecteur d'état suivant :
 	\begin{equation}
-		x = [V_a, \alpha, \theta, q, x_{pid}, x_{pf}]^T
+		x = [V_a, \alpha, \theta, q, x_{\text{pid}}, x_{\text{pf}}]^T
 	\end{equation}
-	Où $x_{pid}$ et $x_{pf}$ sont les états internes du correcteur PI-D et du pré-filtre de la boucle interne.
-	
-	Afin d'annuler l'erreur statique, nous avons augmenté ce système avec un état intégrateur $\xi$ agissant sur l'erreur de vitesse équivalente :
-	\begin{equation}
-		\dot{\xi} = V_{EAS,cons} - V_{EAS,mes}
-	\end{equation}
+	Où $x_{\text{pid}}$ et $x_{\text{pf}}$ sont les états internes du correcteur PI-D et du pré-filtre de la boucle interne.
 	La commandabilité du système augmenté a été vérifiée via le rang de la matrice de commandabilité (\texttt{ctrb}).
 	
 	\begin{figure}[H]
@@ -256,13 +251,20 @@ font=\normalfont\large\bfseries]{subsection}
 	\end{figure}
 	
 	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
-	Le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
+	Le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite[3.6.2]{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
 	Nous avons augmenté le système avec un état intégrateur $\xi$ défini par :
 	\begin{equation}
-		\dot{\xi} = \varepsilon = V_{\text{EAS},c} - V_{\text{EAS},m}
+		\dot{\xi} = V_{\text{EAS,cons}} - V_{\text{EAS,mes}}
 	\end{equation}
-	Il est crucial de noter que l'intégrateur agit sur l'erreur d'\emph{EAS} (et non de TAS), car c'est la grandeur pilotée.
+	Il est crucial de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
 	
+	\begin{figure}[H]
+		\centering
+		%\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_integrateur.png}}
+		\caption{Schéma Simulink de descente avec l'intégrateur}
+		\label{fig:modale_integrateur}
+	\end{figure}
+
 	\section{Placement des pôles}
 	Pour calculer le gain $K_{aug}$ du système augmenté, nous avons utilisé la commande \texttt{place} avec les pôles désirés suivants :
 	\begin{itemize}
@@ -289,11 +291,11 @@ font=\normalfont\large\bfseries]{subsection}
 	\begin{equation}
 		\dot{\hat{x}} = A \hat{x} + B u + L (y_{\text{mes}} - C \hat{x})
 	\end{equation}
-	Où $\hat{x}$ est l'état estimé et $L$ la matrice de gain de l'observateur. Cet observateur est synthétisé en utilisant les trois sorties mesurées disponibles définies dans la matrice $C_{obs}$ :
+	Où $\hat{x}$ est l'état estimé et $L$ la matrice de gain de l'observateur. Cet observateur est synthétisé en utilisant les trois sorties mesurées disponibles définies dans la matrice $C_{\text{obs}}$ :
 	\begin{equation}
 		y_{mes} = [V_a, \theta, q]^T
 	\end{equation}
-	L'observabilité de la paire $(A_6, C_{obs})$ a été validée (rang plein).
+	L'observabilité de la paire $(A_6, C_{\text{obs}})$ a été validée (rang plein).
 	
 	Pour le calcul du gain $L$, bien que la théorie suggère généralement une dynamique d'erreur d'estimation plus rapide que celle de la commande, nous avons choisi de placer les pôles de l'observateur sur les mêmes dynamiques que celles du système en boucle fermée (vecteur \texttt{poles\_desires(1:6)}). Ce choix vise à limiter l'amplification du bruit de mesure sur les états estimés, notamment sur l'incidence $\alpha$. D'après les tests effectués, ce réglage s'est avéré satisfaisant pour notre application et une dynamique plus rapide n'a pas semblé nécessaire.
 	
@@ -312,7 +314,18 @@ font=\normalfont\large\bfseries]{subsection}
 	%----------------------------------------------------------
 	
 	Pour la phase de stabilisation au niveau 30, l'avion doit maintenir simultanément son altitude et sa vitesse aérodynamique de \SI{230}{kts}. Il s'agit d'un problème multi-variable (MIMO) où la poussée $\delta_{thr}$ et la profondeur $\delta_{el}$ sont utilisées conjointement.
-	
+
+	\section{Linéarisation}
+
+	Pour metttre en œuvre la commande, on linéarise le modèle avion au nouveau point de trim: \SI{230}{kts} et \SI{3000}{ft}. Cette linéarisation est réalisée par \texttt{utAcDynamicsFunction.m} et donne le point de fonctionnement suivant: 
+	\begin{equation}
+		\text{trimValLF} = \left( \begin{array}{c}
+				\delta_{\text{PHR}} \\
+				\alpha_{\text{trim}} \\
+				\delta_{\text{THR}}
+		\end{array} \right)
+	\end{equation}
+
 	\section{Synthèse par commande optimale (LQT)}
 	Nous avons implémenté une structure \textit{Linear Quadratic Tracker} (LQT) pour minimiser l'erreur de suivi entre la sortie du système $y$ et un modèle de référence $y_r$. Le critère à minimiser est défini par :
 	\begin{equation}
