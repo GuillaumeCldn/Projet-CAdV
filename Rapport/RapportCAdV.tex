@@ -236,30 +236,24 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	L'objectif de la loi de descente est de maintenir une vitesse équivalente (EAS) constante en agissant sur la consigne d'assiette $\theta_c$, la poussée restant figée à \emph{Idle} \cite[4.6]{Sujet}.
 	
 	\section{Stratégie de commande modale}
-	La linéarisation est effectuée sur le modèle Simulink \texttt{acDynModelGolfTenueClassique}, qui inclut déjà la boucle interne d'assiette. Le système linéarisé $A_6$ est donc d'ordre 6 et correspond au vecteur d'état suivant :
+	La linéarisation est effectuée sur le modèle Simulink \texttt{acDynModelGolfTenueClassique}, qui inclut déjà la boucle interne d'assiette. Le système linéarisé $A_6$ est d'ordre 6 et correspond au vecteur d'état suivant :
 	\begin{equation}
 		x = [V_a, \alpha, \theta, q, x_{\text{pid}}, x_{\text{pf}}]^T
 	\end{equation}
 	Où $x_{\text{pid}}$ et $x_{\text{pf}}$ sont les états internes du correcteur PI-D et du pré-filtre de la boucle interne.
-	La commandabilité du système augmenté a été vérifiée via le rang de la matrice de commandabilité (\texttt{ctrb}).
+	La commandabilité de ce système augmenté a été vérifiée via le rang de la matrice de commandabilité (fonction MatLab \texttt{ctrb}).
 
-% TODO: Ajouter le schéma du préfiltre
-	
+	La commande modale consite à choisir les pôles du système bouclé pour influencer le comportement de ses modes. La fonction MatLab \texttt{place} permet de calculer le gain du retour d'état qui sera utilisé pour commander le système (on note ce gain $K_x$).
+
+	Le retour d'état seul ne permet pas de commander le système, on ajoute une précommande pour adapter la commande au retour d'état. L'architecture de commande du système est illustrée ci-dessous:
+
 	\begin{figure}[H]
 		\centering
-		%\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_prefiltre.png}}
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_modale_prefiltre.png}}
 		\caption{Schéma Simulink de descente avec préfiltre H}
 		\label{fig:modale_prefiltre}
 	\end{figure}
-	
-	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
-	Le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite[3.6.2]{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
-	Nous avons augmenté le système avec un état intégrateur $\xi$ défini par :
-	\begin{equation}
-		\dot{\xi} = V_{\text{EAS,cons}} - V_{\text{EAS,mes}}
-	\end{equation}
-	Il est crucial de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
-	
+
 	\section{Placement des pôles}
 	Pour calculer le gain $K_{aug}$ du système augmenté, nous avons utilisé la commande \texttt{place} avec les pôles désirés suivants :
 	\begin{itemize}
@@ -270,8 +264,16 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	\end{itemize}
 	Ce choix d'un pôle intégrateur rapide ($-10.33$) assure une élimination rapide de l'erreur statique, bien au-delà de la contrainte de stabilité imposée ($\text{Re} < -1.3$).
 	
-	Le schéma complet de la boucle externe est illustré ci-dessous :
+	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
+	Le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite[3.6.2]{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
+	Nous avons augmenté le système avec un état intégrateur $\xi$ défini par :
+	\begin{equation}
+		\dot{\xi} = V_{\text{EAS,cons}} - V_{\text{EAS,mes}}
+	\end{equation}
+	Il est crucial de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
 	
+	Le schéma de la commande modale avec intégrateur appliquée au système linéaire est illustrée ci-dessous:
+
 	\begin{figure}[H]
 		\centering
 		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_modale.png}}
