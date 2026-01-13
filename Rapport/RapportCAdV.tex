@@ -258,13 +258,6 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	\end{equation}
 	Il est crucial de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
 	
-	\begin{figure}[H]
-		\centering
-		%\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_integrateur.png}}
-		\caption{Schéma Simulink de descente avec l'intégrateur}
-		\label{fig:modale_integrateur}
-	\end{figure}
-
 	\section{Placement des pôles}
 	Pour calculer le gain $K_{aug}$ du système augmenté, nous avons utilisé la commande \texttt{place} avec les pôles désirés suivants :
 	\begin{itemize}
