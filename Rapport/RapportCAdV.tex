@@ -242,6 +242,8 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	\end{equation}
 	Où $x_{\text{pid}}$ et $x_{\text{pf}}$ sont les états internes du correcteur PI-D et du pré-filtre de la boucle interne.
 	La commandabilité du système augmenté a été vérifiée via le rang de la matrice de commandabilité (\texttt{ctrb}).
+
+% TODO: Ajouter le schéma du préfiltre
 	
 	\begin{figure}[H]
 		\centering
@@ -272,9 +274,9 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	
 	\begin{figure}[H]
 		\centering
-		%\includegraphics[width=\textwidth]{schema_boucle_externe.png} % Placeholder
-		\caption{Schéma Simulink de la boucle de vitesse avec Intégrateur (Commande Modale)}
-		\label{fig:boucle_externe}
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_modale.png}}
+		\caption{Schéma Simulink de la boucle de vitesse avec intégrateur sur le système linéaire}
+		\label{fig:schema_lineaire_modale}
 	\end{figure}
 	
 	\section{Observateur d'état}
@@ -294,7 +296,9 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	
 	\section{Résultats de simulation}
 	La validation sur le modèle non-linéaire (sur une durée de \SI{600}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure \ref{fig:resultat_vitesse} que la Vitesse Vraie (\emph{TAS}) diminue progressivement au cours de la descente pour maintenir une \emph{EAS} constante, validant la physique du vol.
-	
+
+% TODO: Add sim results	
+
 	\begin{figure}[H]
 		\centering
 		%\includegraphics[width=0.8\textwidth]{resultat_vitesse.png} % Placeholder
