@@ -170,7 +170,7 @@ taero = 20; %secondes pour capture vitesse aérodynamique
 Daero = 0; %dépassement à la réponse indicielle
 
 tpente = 2; %temps de réponse en boucle fermée
-Daero = 0; %dépassement à la réponse indicielle
+Dpente = 0; %dépassement à la réponse indicielle
 
 %linéarisation en palier
 hTrimLF = 30*FL2M; % m
@@ -197,5 +197,121 @@ uTrimLF(idelevator) = 0;
 % Vérification trim
 xdotTrimLF = utAcDynamicsFunction(xTrimLF,uTrimLF,aircraftChosen,km,ms);
 [Alf, Blf, Clf, Dlf] = linmod('acDynModel_ToLinearize_2015',xTrimLF, uTrimLF);
+
+% Extraction pour LQT
+idx_states = iVa:iq; 
+idx_inputs = ithr:idelevator; % Entrées : Poussée et Gouverne
+
+A_sys = Alf(idx_states, idx_states);
+B_sys = Blf(idx_states, idx_inputs);
+
+
+C_sys = [1,  0, 0, 0; 
+         0, -1, 1, 0];
+     
+D_sys = zeros(4,2);
+
+% Vérification des pôles du système (pratiquement les mêmes qu'avant)
+poles_sys = eig(A_sys);
+
+% Modèle de Référence
+
+Ar = [-1/taero, 0; 
+       0,      -1/tpente];
+
+Br = [1/taero, 0; 
+      0,       1/tpente];
+  
+Cr = eye(2);
+
+Dr = zeros(2,2);
+
+
+Aaug = [A_sys, zeros(4,2);
+        zeros(2,4), Ar];
+    
+Baug = [B_sys; zeros(2,2)];
+
+Caug = [C_sys, -Cr];
+
+Daug = zeros(2,2)
+
+N = [Aaug, Baug;
+    Caug, zeros(2,2)];
+
+% Dimensions
+n_states = size(A_sys, 1); % 4
+n_ref = size(Ar, 1);       % 2
+n_inputs = size(B_sys, 2); % 2
+n_outputs = size(C_sys, 1);% 2
+
+% Vérification que N est inversible
+if rank(N) < size(N, 1)
+    warning('La matrice N est singulière, vérifier la commandabilité/observabilité statique.');
+end
+
+%% Suite Commande Optimale/MIMO : Calcul des gains LQT
+
+% Définition des poids pour le critère quadratique J
+% Q : Pénalise l'erreur de suivi e = y - yr
+q_Va = 1 / (1)^2;      % On tolère 1 m/s d'erreur
+q_gamma = 1 / (0.01)^2; % On tolère 0.01 rad ( environ 0.6 deg) d'erreur
+Q = diag([q_Va, q_gamma]);
+
+% R : Pénalise l'effort de commande u
+% u1 = poussée (ratio 0-1), u2 = elevator (rad)
+r_th = 1 / (0.5)^2;     % Pour la poussée
+r_el = 1 / (0.1)^2;     % Pour la gouverne ( environ 5 deg)
+R = diag([r_th, r_el]);
+
+% Equation de Riccati (LQR augmenté)
+% Le critère est e'*Q*e + u'*R*u.
+% Comme e = Caug * x_aug, on a x_aug' * (Caug'*Q*Caug) * x_aug
+Q_aug = Caug' * Q * Caug;
+
+% Calcul du gain optimal K_aug = [Kx, Kr]
+[K_aug, S, E] = lqr(Aaug, Baug, Q_aug, R);
+
+% Extraction des gains
+Kx = K_aug(:, 1:4); % Gain de retour d'état (sur Va, alpha, theta, q)
+Kr = K_aug(:, 5:6); % Gain sur l'état du modèle de référence
+
+
+% Vecteur second membre pour r_ss (Eq 3.71 modifiée)
+% Le système est : N * Z = [0; -Br; 0] * r_ss
+RHS_Mat = [zeros(n_states, n_ref); 
+           -Br; 
+           zeros(n_outputs, n_ref)];
+
+% Résolution pour trouver les matrices de gains statiques
+% M = [Nx; Nxr; Nu] tel que Z_ss = M * r_ss
+M = N \ RHS_Mat;
+
+Nx = M(1:n_states, :);             % Relation x_ss / r_ss
+Nxr = M(n_states+1:n_states+n_ref, :); % Relation xr_ss / r_ss
+Nu = M(end-n_inputs+1:end, :);     % Relation u_ss / r_ss
+
+% Calcul du gain de pré-commande Dpf (Eq 3.87)
+% upf = -Kr*xr + Dpf*r_ss
+% u = -Kx*x + upf
+% Dpf assure que u_ss est cohérent avec la référence
+Dpf = K_aug * [Nx; Nxr] + Nu;
+
+disp('Gains LQT calculés.');
+disp('Kx (Etat) :'); disp(Kx);
+disp('Kr (Reference) :'); disp(Kr);
+disp('Dpf (Pre-filtre) :'); disp(Dpf);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
