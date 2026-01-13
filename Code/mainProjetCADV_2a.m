@@ -107,7 +107,7 @@ xTrimcm(itheta) = thetaTrim; %rad
 uTrimcm = 0;
 
 % Linearisation autour du point de trim
-[Acm, Bcm, Ccm, Dcm] = linmod('acDynModelGolfTenueClassique',xTrimcm, uTrimcm);
+[Acm, Bcm, Ccm, Dcm] = linmod('Golf_Nonlin_Classique',xTrimcm, uTrimcm);
 
 % Commandablite du systeme
 rank(ctrb(Acm,Bcm));
