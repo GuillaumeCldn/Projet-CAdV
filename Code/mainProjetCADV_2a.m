@@ -179,7 +179,7 @@ trimValLF = utComputeTrimLevelFlight(hTrimLF,VaTrimLF,aircraftChosen,km,ms); %tr
 
 dPHRTrimLF = trimValLF(1); %rad
 alphaTrimLF = trimValLF(2); %rad
-thetaTrimLF = trimValLF(3); %rad
+thetaTrimLF = trimValLF(2); %rad
 fpaDegLF = RAD2DEG*(thetaTrimLF-alphaTrimLF); %pente, flight path angle
 
 xTrimLF = zeros(TOTAL_SV, 1);
