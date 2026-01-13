@@ -100,7 +100,7 @@ font=\normalfont\large\bfseries]{subsection}
 	\begin{itemize}
 		\item $\delta_{\text{PHR}}$: le braquage du plan horizontal réglable (PHR)
 		\item $\delta_{el}$: le braquage de la gouverne de profondeur
-		\item $\delta_{th}$: la position de la manette de poussée
+		\item $\delta_{\text{THR}}$: la position de la manette de poussée
 	\end{itemize}
 	
 	Pour remplir ce cahier des charges, nous allons découper la commande de l'avion en trois sous-commandes distinctes:
@@ -139,7 +139,7 @@ font=\normalfont\large\bfseries]{subsection}
 	\begin{itemize}
 		\item Altitude : \SI{15000}{ft} (\SI{4572}{m})
 		\item Vitesse vraie ($V_a$) : $\approx$ \SI{139}{m/s} (pour \SI{260}{kts} EAS)
-		\item Poussée : $\delta_{th} = 0.1$ (Idle)
+		\item Poussée : $\delta_{\text{THR}} = 0.1$ (Idle)
 		\item Assiette ($\theta_{trim}$) et Incidence ($\alpha_{trim}$) : calculées pour assurer la portance.
 	\end{itemize}
 	
@@ -174,10 +174,10 @@ font=\normalfont\large\bfseries]{subsection}
 	\chapter{Commande de l'assiette (Boucle Interne)}
 	%----------------------------------------------------------
 	
-	Ce chapitre détaille la conception de la boucle interne de pilotage, dont l'objectif est d'asservir l'assiette longitudinale $\theta$ de l'avion via la gouverne de profondeur $\delta_{el}$ \cite{Sujet}.
+	Ce chapitre détaille la conception de la boucle interne de pilotage, dont l'objectif est d'asservir l'assiette longitudinale $\theta$ de l'avion via la gouverne de profondeur $\delta_{el}$ \cite[4.5]{Sujet}.
 	
 	\section{Synthèse du correcteur}
-	Nous avons retenu une structure de commande classique de type PI-D (Proportionnel, Intégral, Dérivée sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang \cite{Sujet}\cite{Wang2009}.
+Nous avons retenu une structure de commande classique de type PI-D (Proportionnel Intégral, Dérivée sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang, présentée dans le sujet au paragraphe 3.5.1 du sujet \cite{Sujet} et dans l'article de \emph{Wang et al.} \cite{Wang2009}.
 	
 	Conformément au cahier des charges, nous avons conservé les spécifications initiales pour la méthode de Wang, à savoir :
 	\begin{equation}
@@ -211,11 +211,11 @@ font=\normalfont\large\bfseries]{subsection}
 		\label{fig:schemas_assiette}
 	\end{figure}
 	
-	Afin de valider la synthèse et la qualité de la linéarisation, nous avons superposé la réponse indicielle des deux modèles pour un échelon de consigne de \SI{5}{\degree} partant du point de trim.
+	Afin de valider la synthèse et la qualité de la linéarisation, nous avons superposé la réponse indicielle des deux modèles pour une consigne en échelon d'amplitude \SI{5}{\degree} partant du point de trim.
 	
 	\begin{figure}[htbp]
 		\centering
-		\includegraphics[width=0.95\textwidth, trim={1cm 0.5cm 1cm 1cm}, clip]{reponse_bilineaire_assiette.png}
+		\makebox[\textwidth][c]{\includegraphics[trim={0 0 0 0.82cm}, clip, width=1.1\textwidth]{reponse_bilineaire_assiette.png}}
 		\vspace{-1em} 
 		\caption{Comparaison des réponses indicielles (Linéaire vs Non-linéaire)}
 		\label{fig:reponse_bilineaire_assiette}
@@ -233,55 +233,34 @@ font=\normalfont\large\bfseries]{subsection}
 	\chapter{Loi de descente (Open Descent)}
 	%----------------------------------------------------------
 	
-	L'objectif de la loi de descente est de maintenir une vitesse équivalente (\emph{EAS}) constante en agissant sur la consigne d'assiette $\theta_c$, la poussée restant figée à \emph{Idle} \cite{Sujet}.
+	L'objectif de la loi de descente est de maintenir une vitesse équivalente (EAS) constante en agissant sur la consigne d'assiette $\theta_c$, la poussée restant figée à \emph{Idle} \cite[4.6]{Sujet}.
 	
 	\section{Stratégie de commande modale}
-	La linéarisation est effectuée sur le modèle Simulink \texttt{acDynModelGolfTenueClassique}, qui inclut déjà la boucle interne d'assiette. Le système linéarisé $A_6$ est donc d'ordre 6 et correspond au vecteur d'état suivant :
+	La linéarisation est effectuée sur le modèle Simulink \texttt{acDynModelGolfTenueClassique}, qui inclut déjà la boucle interne d'assiette. Le système linéarisé $A_6$ est d'ordre 6 et correspond au vecteur d'état suivant :
 	\begin{equation}
-		x = [V_a, \alpha, \theta, q, x_{pid}, x_{pf}]^T
+		x = [V_a, \alpha, \theta, q, x_{\text{pid}}, x_{\text{pf}}]^T
 	\end{equation}
-	Où $x_{pid}$ et $x_{pf}$ sont les états internes du correcteur PI-D et du pré-filtre de la boucle interne.
-	
-	Afin d'annuler l'erreur statique, nous avons augmenté ce système avec un état intégrateur $\xi$ agissant sur l'erreur de vitesse équivalente :
+	Où $x_{\text{pid}}$ et $x_{\text{pf}}$ sont les états internes du correcteur PI-D et du pré-filtre de la boucle interne.
+	La commandabilité de ce système augmenté a été vérifiée via le rang de la matrice de commandabilité (fonction MatLab \texttt{ctrb}).
+
+	La commande modale consite à choisir les pôles du système bouclé pour influencer le comportement de ses modes. La fonction MatLab \texttt{place} permet de calculer le gain du retour d'état qui sera utilisé pour commander le système (on note ce gain $K_x$).
+
+	Le retour d'état seul ne permet pas de commander le système, on ajoute une précommande pour adapter la commande au retour d'état. La précommande est calculée ainsi \cite[eq. 3.50]{Sujet}:
+
 	\begin{equation}
-		\dot{\xi} = V_{EAS,cons} - V_{EAS,mes}
+		H = -(C \cdot (A-B K)^{-1}\cdot B)^{-1} 
 	\end{equation}
-	La commandabilité du système augmenté a été vérifiée via le rang de la matrice de commandabilité (\texttt{ctrb}).
-	
+	\pagebreak
+
+	L'architecture de commande du système est illustrée ci-dessous:
+
 	\begin{figure}[H]
 		\centering
-		%\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_prefiltre.png}}
-		\caption{Schéma Simulink de descente avec préfiltre H}
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_modale_prefiltre.png}}
+		\caption{Schéma Simulink de la commande avec préfiltre $H$}
 		\label{fig:modale_prefiltre}
 	\end{figure}
-	
-	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
-	Le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
-	Nous avons augmenté le système avec un état intégrateur $\xi$ défini par :
-	\begin{equation}
-		\dot{\xi} = \varepsilon = V_{\text{EAS},c} - V_{\text{EAS},m}
-	\end{equation}
-	Il est crucial de noter que l'intégrateur agit sur l'erreur d'\emph{EAS} (et non de TAS), car c'est la grandeur pilotée.
-	
-	\section{Placement des pôles}
-	Pour calculer le gain $K_{aug}$ du système augmenté, nous avons utilisé la commande \texttt{place} avec les pôles désirés suivants :
-	\begin{itemize}
-		\item \textbf{Dynamique dominante ($dp$)} : Conservée de la méthode de Wang (boucle interne).
-		\item \textbf{Modes rapides} : Pôles complexes conjugués conservés vers $-3.4 \pm 0.15i$ (observés dans la matrice $A_6$ via \texttt{eig}). Nous avons choisi de ne pas modifier ces modes naturels pour éviter de solliciter inutilement les actionneurs.
-		\item \textbf{Pôles réels de réglage} : Fixés à $-3$ et $-4$.
-		\item \textbf{Pôle de l'intégrateur} : Fixé à $-10.33$.
-	\end{itemize}
-	Ce choix d'un pôle intégrateur rapide ($-10.33$) assure une élimination rapide de l'erreur statique, bien au-delà de la contrainte de stabilité imposée ($\text{Re} < -1.3$).
-	
-	Le schéma complet de la boucle externe est illustré ci-dessous :
-	
-	\begin{figure}[H]
-		\centering
-		%\includegraphics[width=\textwidth]{schema_boucle_externe.png} % Placeholder
-		\caption{Schéma Simulink de la boucle de vitesse avec Intégrateur (Commande Modale)}
-		\label{fig:boucle_externe}
-	\end{figure}
-	
+
 	\section{Observateur d'état}
 	Pour implémenter cette loi de commande par retour d'état, nous devons connaître l'ensemble du vecteur d'état $x$. Or, certaines grandeurs comme l'incidence $\alpha$ ne sont pas toujours mesurées directement ou sont bruitées.
 	
@@ -289,17 +268,66 @@ font=\normalfont\large\bfseries]{subsection}
 	\begin{equation}
 		\dot{\hat{x}} = A \hat{x} + B u + L (y_{\text{mes}} - C \hat{x})
 	\end{equation}
-	Où $\hat{x}$ est l'état estimé et $L$ la matrice de gain de l'observateur. Cet observateur est synthétisé en utilisant les trois sorties mesurées disponibles définies dans la matrice $C_{obs}$ :
+	Où $\hat{x}$ est l'état estimé et $L$ la matrice de gain de l'observateur. Cet observateur est synthétisé en utilisant les trois sorties mesurées disponibles définies dans la matrice $C_{\text{obs}}$ :
 	\begin{equation}
 		y_{mes} = [V_a, \theta, q]^T
 	\end{equation}
-	L'observabilité de la paire $(A_6, C_{obs})$ a été validée (rang plein).
+	L'observabilité de la paire $(A_6, C_{\text{obs}})$ a été validée (rang plein).
 	
 	Pour le calcul du gain $L$, bien que la théorie suggère généralement une dynamique d'erreur d'estimation plus rapide que celle de la commande, nous avons choisi de placer les pôles de l'observateur sur les mêmes dynamiques que celles du système en boucle fermée (vecteur \texttt{poles\_desires(1:6)}). Ce choix vise à limiter l'amplification du bruit de mesure sur les états estimés, notamment sur l'incidence $\alpha$. D'après les tests effectués, ce réglage s'est avéré satisfaisant pour notre application et une dynamique plus rapide n'a pas semblé nécessaire.
+
+	\section{Choix des pôles}
+	Pour calculer le gain du retour d'état, nous avons choisi les pôles suivants :
+	\begin{itemize}
+		\item \textbf{Dynamique dominante ($dp$)} : Conservée de la méthode de Wang (boucle interne).
+		\item \textbf{Modes rapides} : Pôles complexes conjugués conservés vers $-3.4 \pm 0.15i$ (observés dans la matrice $A_6$ via la fonction MatLab \texttt{eig}). Nous avons choisi de ne pas modifier ces modes naturels pour éviter de solliciter inutilement les actionneurs.
+		\item \textbf{Pôles réels de réglage} : Fixés à $-3$ et $-4$.
+	\end{itemize}
+
+	La simulation de la commande modale donne le résultat suivant:
 	
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_lineaire_modale_prefiltre.png}}
+		\caption{Réponse de la commande modale à une consigne en échelon d'amplitude 3}
+		\label{fig:reponse_modale_prefiltre}
+	\end{figure}
+
+% TODO: Détailler
+	La réponse de cette commande n'est pas du tout satisfaisante: l'erreur statique est de l'ordre de $2.42$.
+
+	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
+	Pour pallier les limitations de la précommande seule, le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite[3.6.2]{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
+	Nous avons donc augmenté le système avec un état intégrateur $\xi$ défini par :
+	\begin{equation}
+		\dot{\xi} = V_{\text{EAS,cons}} - V_{\text{EAS,mes}}
+	\end{equation}
+	Il est crucial de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
+
+	On choisit pour l'intégrateur un pôle à $-10.33$, ce qui assure une élimination rapide de l'erreur statique, et vérifie la contrainte de stabilité imposée ($\text{Re} < -1.3$).
+
+	Le schéma de la commande modale avec intégrateur appliquée au système linéaire est illustrée ci-dessous:
+
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_modale.png}}
+		\caption{Schéma Simulink de la boucle de vitesse avec intégrateur sur le système linéaire}
+		\label{fig:schema_lineaire_modale}
+	\end{figure}
+	
+	La simulation de la commande modale avec intégrateur donne le résultat suivants:
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_lineaire_modale_integrateur.png}}
+		\caption{Réponse de la commande modale à une consigne en échelon d'amplitude 3}
+		\label{fig:reponse_modale_integrateur}
+	\end{figure}
+
 	\section{Résultats de simulation}
 	La validation sur le modèle non-linéaire (sur une durée de \SI{600}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure \ref{fig:resultat_vitesse} que la Vitesse Vraie (\emph{TAS}) diminue progressivement au cours de la descente pour maintenir une \emph{EAS} constante, validant la physique du vol.
-	
+
+% TODO: Add sim results	
+
 	\begin{figure}[H]
 		\centering
 		%\includegraphics[width=0.8\textwidth]{resultat_vitesse.png} % Placeholder
@@ -312,7 +340,23 @@ font=\normalfont\large\bfseries]{subsection}
 	%----------------------------------------------------------
 	
 	Pour la phase de stabilisation au niveau 30, l'avion doit maintenir simultanément son altitude et sa vitesse aérodynamique de \SI{230}{kts}. Il s'agit d'un problème multi-variable (MIMO) où la poussée $\delta_{thr}$ et la profondeur $\delta_{el}$ sont utilisées conjointement.
-	
+
+	\section{Linéarisation}
+
+	Pour metttre en œuvre la commande, on linéarise le modèle avion au nouveau point de trim: \SI{230}{kts} et \SI{3000}{ft}. Cette linéarisation est réalisée par \texttt{utAcDynamicsFunction.m} et donne le point de fonctionnement suivant: 
+	\begin{equation}
+		\text{trimValLF} = \left( \begin{array}{c}
+				\delta_{\text{PHR}} \\
+				\alpha_{\text{trim}} \\
+				\delta_{\text{THR}}
+		\end{array} \right) = 
+		\left( \begin{array}{c}
+				\SI{-10.0}{\degree} \\
+				\SI{3.6}{\degree} \\
+				\SI{0.25}{\%}	
+		\end{array} \right)
+	\end{equation}
+
 	\section{Synthèse par commande optimale (LQT)}
 	Nous avons implémenté une structure \textit{Linear Quadratic Tracker} (LQT) pour minimiser l'erreur de suivi entre la sortie du système $y$ et un modèle de référence $y_r$. Le critère à minimiser est défini par :
 	\begin{equation}
