@@ -175,6 +175,27 @@ Daero = 0; %dépassement à la réponse indicielle
 %linéarisation en palier
 hTrimLF = 30*FL2M; % m
 VaTrimLF = utEas2Tas(230*KTS2MS, hTrimLF); % m/s, 230 depuis la consigne
-trimVal = utComputeTrimLevelFlight(hTrim,VaTrim,aircraftChosen,km,ms); %trim thrust idle (valeur trim, alpha, dthr)
+trimValLF = utComputeTrimLevelFlight(hTrimLF,VaTrimLF,aircraftChosen,km,ms); %trim thrust idle (dphr, alpha, dthr)
+
+dPHRTrimLF = trimValLF(1); %rad
+alphaTrimLF = trimValLF(2); %rad
+thetaTrimLF = trimValLF(3); %rad
+fpaDegLF = RAD2DEG*(thetaTrimLF-alphaTrimLF); %pente, flight path angle
+
+xTrimLF = zeros(TOTAL_SV, 1);
+xTrimLF(ihp) = hTrimLF; %m
+xTrimLF(iVa) = VaTrimLF; %m/s
+xTrimLF(ialpha) = alphaTrimLF; %rad
+xTrimLF(itheta) = thetaTrimLF; %rad
+
+% Vecteur de commande au point de trim choisi
+uTrimLF = zeros(TOTAL_CMD, 1);
+uTrimLF(idPHR) = dPHRTrimLF;
+uTrimLF(ithr) = trimValLF(3);
+uTrimLF(idelevator) = 0;
+
+% Vérification trim
+xdotTrimLF = utAcDynamicsFunction(xTrimLF,uTrimLF,aircraftChosen,km,ms);
+[Alf, Blf, Clf, Dlf] = linmod('acDynModel_ToLinearize_2015',xTrimLF, uTrimLF);
 
 
