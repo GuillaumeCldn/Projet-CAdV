@@ -312,6 +312,13 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 		\label{fig:schema_lineaire_modale}
 	\end{figure}
 	
+	La simulation de la commande modale donne les résultats suivants:
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{reponse_lineaire_modale_integrateur.png}}
+		\caption{Réponse de la commande modale à une consigne en échelon d'amplitude 3}
+		\label{fig:reponse_modale_integrateur}
+	\end{figure}
 	
 	\section{Résultats de simulation}
 	La validation sur le modèle non-linéaire (sur une durée de \SI{600}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure \ref{fig:resultat_vitesse} que la Vitesse Vraie (\emph{TAS}) diminue progressivement au cours de la descente pour maintenir une \emph{EAS} constante, validant la physique du vol.
