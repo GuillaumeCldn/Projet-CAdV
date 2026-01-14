@@ -255,7 +255,8 @@ end
 
 % Définition des poids pour le critère quadratique J
 % Q : Pénalise l'erreur de suivi e = y - yr
-q_Va = 1 / (11.5)^2;      % On veut tolérer 1.5 m/s d'erreur
+q_Va = 1 / (30)^2;      % On veut tolérer 16 m/s d'erreur, pour éviter le dépassement, 
+% sachant que c'est l'écart qu'on aura en réalité (30kt)
 q_gamma = 1 / (0.01)^2; % On veut tolérer 0.01 rad (environ 0.5 deg) d'erreur
 Q = diag([q_Va, q_gamma]);
 
