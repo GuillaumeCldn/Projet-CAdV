@@ -255,14 +255,14 @@ end
 
 % Définition des poids pour le critère quadratique J
 % Q : Pénalise l'erreur de suivi e = y - yr
-q_Va = 1 / (5)^2;      % Erreur en vitesse % 40 pour le linéaire marche bien
-q_gamma = 1 / (0.1)^2; % On veut tolérer 0.01 rad (environ 0.5 deg) d'erreur
+q_Va = 1000;%1 / (40)^2;      % Erreur en vitesse % 40 pour le linéaire marche bien
+q_gamma = 1000;%1 / (0.01)^2; % On veut tolérer 0.01 rad (environ 0.5 deg) d'erreur
 Q = diag([q_Va, q_gamma]);
 
 % R : Pénalise l'effort de commande u
 % u1 = poussée (ratio 0-1), u2 = elevator (rad)
-r_th = 1 / (0.05)^2;     % Pour la poussée % 0.5 en linéaire marche bien
-r_el = 1 / (0.1)^2;     % Pour la gouverne (environ 15 deg) % 0.26 en linéaire marche bien
+r_th = 1;% / (0.5)^2;     % Pour la poussée % 0.5 en linéaire marche bien
+r_el = 1;% / (0.26)^2;     % Pour la gouverne (environ 15 deg) % 0.26 en linéaire marche bien
 R = diag([r_th, r_el]);
 
 % Equation de Riccati (LQR augmenté)
