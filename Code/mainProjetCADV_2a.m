@@ -251,7 +251,7 @@ if rank(N) < size(N, 1)
     warning('La matrice N est singulière, vérifier la commandabilité/observabilité statique.');
 end
 
-%% Suite Commande Optimale/MIMO : Calcul des gains LQT
+% Suite Commande Optimale/MIMO : Calcul des gains LQT
 
 % Définition des poids pour le critère quadratique J
 % Q : Pénalise l'erreur de suivi e = y - yr
