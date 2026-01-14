@@ -180,6 +180,7 @@ trimValLF = utComputeTrimLevelFlight(hTrimLF,VaTrimLF,aircraftChosen,km,ms); %tr
 dPHRTrimLF = trimValLF(1); %rad
 alphaTrimLF = trimValLF(2); %rad
 thetaTrimLF = trimValLF(2); %rad
+dthrTrimLF = trimValLF(3);
 fpaDegLF = RAD2DEG*(thetaTrimLF-alphaTrimLF); %pente, flight path angle
 
 xTrimLF = zeros(TOTAL_SV, 1);
@@ -254,14 +255,14 @@ end
 
 % Définition des poids pour le critère quadratique J
 % Q : Pénalise l'erreur de suivi e = y - yr
-q_Va = 1 / (1)^2;      % On tolère 1 m/s d'erreur
-q_gamma = 1 / (0.01)^2; % On tolère 0.01 rad ( environ 0.6 deg) d'erreur
+q_Va = 1 / (1)^2;      % On veut tolérer 1 m/s d'erreur
+q_gamma = 1 / (0.01)^2; % On veut tolérer 0.01 rad (environ 0.6 deg) d'erreur
 Q = diag([q_Va, q_gamma]);
 
 % R : Pénalise l'effort de commande u
 % u1 = poussée (ratio 0-1), u2 = elevator (rad)
-r_th = 1 / (0.5)^2;     % Pour la poussée
-r_el = 1 / (0.1)^2;     % Pour la gouverne ( environ 5 deg)
+r_th = 1 / (0.05)^2;     % Pour la poussée
+r_el = 1 / (0.1)^2;     % Pour la gouverne (environ 5 deg)
 R = diag([r_th, r_el]);
 
 % Equation de Riccati (LQR augmenté)
