@@ -336,14 +336,12 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	\end{figure}
 	
 	\section{Résultats de simulation}
-	La validation sur le modèle non-linéaire (sur une durée de \SI{600}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure \ref{fig:resultat_vitesse} que la Vitesse Vraie (\emph{TAS}) diminue progressivement au cours de la descente pour maintenir une \emph{EAS} constante, validant la physique du vol.
-
-% TODO: Add sim results	
+	La validation sur le modèle non-linéaire (sur une durée de \SI{60}{s}) démontre le bon fonctionnement de la loi. On observe la sur la figure \ref{fig:resultat_vitesse} que le système non linéaire répond de façon adéquate à un échelon d'amplitude \SI{2}{kts}.
 
 	\begin{figure}[H]
 		\centering
-		%\includegraphics[width=0.8\textwidth]{resultat_vitesse.png} % Placeholder
-		\caption{Évolution de la Vitesse Vraie (TAS) lors de la descente à EAS constante}
+		\includegraphics[width=\textwidth]{resultat_vitesse.png}
+		\caption{Réponse du système non linéaire à un échelon de consigne d'amplitude \SI{2}{kts}}
 		\label{fig:resultat_vitesse}
 	\end{figure}
 	
