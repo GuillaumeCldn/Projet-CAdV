@@ -302,7 +302,6 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	\begin{equation}
 		\dot{\xi} = V_{\text{EAS,cons}} - V_{\text{EAS,mes}}
 	\end{equation}
-	Il est crucial de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
 
 	On choisit pour l'intégrateur un pôle à $-10.33$, ce qui assure une élimination rapide de l'erreur statique, et vérifie la contrainte de stabilité imposée ($\text{Re} < -1.3$).
 
@@ -323,15 +322,26 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 		\label{fig:reponse_modale_integrateur}
 	\end{figure}
 
-	\section{Résultats de simulation}
-	La validation sur le modèle non-linéaire (sur une durée de \SI{600}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure \ref{fig:resultat_vitesse} que la Vitesse Vraie (\emph{TAS}) diminue progressivement au cours de la descente pour maintenir une \emph{EAS} constante, validant la physique du vol.
+	Cette réponse est satisafaisante: le système répond en environ \SI{3.5}{s} et avec un dépassement de l'ordre de \SI{6}{\%}. Nous avons donc implémenté cette commande sur le modèle non linéaire.
 
-% TODO: Add sim results	
+	\section{Modèle non linéaire}
+
+	Le schéma suivant illustre l'intégration de la commande modale sur le système non linéaire. Nous avons conservé la possibilité d'alterner entre la précomande $H$ et l'intégrateur, même si l'intégrateur se révèle être supérieur. Il est aussi important de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
 
 	\begin{figure}[H]
 		\centering
-		%\includegraphics[width=0.8\textwidth]{resultat_vitesse.png} % Placeholder
-		\caption{Évolution de la Vitesse Vraie (TAS) lors de la descente à EAS constante}
+		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{schema_nonlineaire_modale.png}}
+		\caption{Schéma de la commande modale appliquée au modèle non linéaire}
+		\label{fig:schema_modale_nonlineaire}
+	\end{figure}
+	
+	\section{Résultats de simulation}
+	La validation sur le modèle non-linéaire (sur une durée de \SI{60}{s}) démontre le bon fonctionnement de la loi. On observe la sur la figure \ref{fig:resultat_vitesse} que le système non linéaire répond de façon adéquate à un échelon d'amplitude \SI{2}{kts}.
+
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=\textwidth]{resultat_vitesse.png}
+		\caption{Réponse du système non linéaire à un échelon de consigne d'amplitude \SI{2}{kts}}
 		\label{fig:resultat_vitesse}
 	\end{figure}
 	
