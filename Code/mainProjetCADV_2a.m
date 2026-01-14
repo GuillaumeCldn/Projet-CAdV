@@ -166,11 +166,11 @@ eig(A6-L6*Cobs);
 
 %% Commande Optimale/MIMO
 
-taero = 20; %secondes pour capture vitesse aérodynamique
-Daero = 0; %dépassement à la réponse indicielle
+taero = 20; % Temps de réponse capture vitesse aérodynamique
+Daero = 0; % Dépassement à la réponse indicielle
 
-tpente = 2; %temps de réponse en boucle fermée
-Dpente = 0; %dépassement à la réponse indicielle
+tpente = 2; % Temps de réponse capture pente
+Dpente = 0; % Dépassement à la réponse indicielle
 
 %linéarisation en palier
 hTrimLF = 30*FL2M; % m
@@ -217,11 +217,11 @@ poles_sys = eig(A_sys);
 
 % Modèle de Référence
 
-Ar = [-1/taero, 0; 
-       0,      -1/tpente];
+Ar = [-3/taero, 0; 
+       0,      -3/tpente];
 
-Br = [1/taero, 0; 
-      0,       1/tpente];
+Br = [3/taero, 0; 
+      0,       3/tpente];
   
 Cr = eye(2);
 
@@ -255,13 +255,13 @@ end
 
 % Définition des poids pour le critère quadratique J
 % Q : Pénalise l'erreur de suivi e = y - yr
-q_Va = 1 / (1)^2;      % On veut tolérer 1 m/s d'erreur
-q_gamma = 1 / (0.01)^2; % On veut tolérer 0.01 rad (environ 0.6 deg) d'erreur
+q_Va = 1 / (11.5)^2;      % On veut tolérer 1.5 m/s d'erreur
+q_gamma = 1 / (0.01)^2; % On veut tolérer 0.01 rad (environ 0.5 deg) d'erreur
 Q = diag([q_Va, q_gamma]);
 
 % R : Pénalise l'effort de commande u
 % u1 = poussée (ratio 0-1), u2 = elevator (rad)
-r_th = 1 / (0.05)^2;     % Pour la poussée
+r_th = 1 / (0.5)^2;     % Pour la poussée
 r_el = 1 / (0.1)^2;     % Pour la gouverne (environ 5 deg)
 R = diag([r_th, r_el]);
 
