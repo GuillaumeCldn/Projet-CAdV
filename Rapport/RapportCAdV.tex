@@ -10,6 +10,7 @@
 \usepackage{subcaption}
 \usepackage{amsmath}
 \usepackage{siunitx}
+\sisetup{output-decimal-marker = {,}}
 \usepackage{booktabs}
 \usepackage[hidelinks]{hyperref}
 \usepackage{lmodern}
@@ -361,7 +362,8 @@ font=\normalfont\large\bfseries]{subsection}
 	\end{figure}
 	
 	\section{Résultats de simulation}
-	La validation sur le modèle non-linéaire (sur une durée de \SI{60}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure~\ref{fig:resultat_vitesse} que le système non linéaire répond de façon adéquate à un échelon de consigne d'amplitude \SI{2}{kts}.
+	
+	Le graphique suivant présente la réponse du modèle non linéaire à un échelon d'amplitude \SI{2}{kts} sur une durée de \SI{60}{s}. Le dépassment de l'ordre de \SI{0,2}{\%} et le temps de réponse de \SI{6}{s} sont adéquats. L'erreur statique relative est de l'ordre de \SI{0,1}{\%}, ce qui est suffisant pour un contrôle de la vitesse au noeud près. On peut donc conclure que le comportement de la loi de maintien de la vitesse sur le modèle non linéaire est satisfaisant.
 	
 	\begin{figure}[H]
 		\centering
@@ -406,19 +408,61 @@ font=\normalfont\large\bfseries]{subsection}
 		\item \textbf{Matrice $R$} : Les coefficients ont été ajustés pour éviter des sollicitations brutales des moteurs (limitation de la fatigue) et des gouvernes.
 	\end{itemize}
 	
-	
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{schema_lineaire_optimale.png}}
+		\caption{Schéma de la commande optimale appliquée au modèle linéaire}
+		\label{fig:schema_lineaire_optimale}
+	\end{figure}
 	
 	\section{Analyse du couplage}
-	Contrairement aux lois SISO précédentes, la commande optimale LQT permet un \textbf{découplage} partiel des axes. Une variation de consigne de vitesse est compensée par une action combinée sur la poussée (action directe) et sur la profondeur (pour contrer le moment cabreur induit par les moteurs).
-	
-	
+	Contrairement aux lois SISO précédentes, la commande optimale LQT permet un \textbf{découplage} partiel des axes. Une variation de consigne de vitesse est compensée par une action combinée sur la poussée (action directe) et sur la profondeur (pour contrer le moment cabreur induit par les moteurs). Le graphique suivant illustre comment répond le modèle linéaire grâce ) ce découplage.
+
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_lineaire_optimale.png}}
+		\caption{Réponse de la commande optimale appliquée au modèle linéaire à des échelons de pente de \SI{10}{\degree} et de vitesse de \SI{230}{kts}}
+		\label{fig:reponse_lineaire_optimale}
+	\end{figure}
+
 	%----------------------------------------------------------
 	\chapter{Simulation du scénario complet}
 	%----------------------------------------------------------
 	
 	\section{Gestion de la transition}
-	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition est déclenchée lors de la capture de l'altitude cible (\SI{3000}{ft}).
+	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition entre les lois de commande est faite bar un bloc \texttt{Switch} qui bascule lorsque l'atitude de l'avion passe sous la barre de \SI{914}{m} (\SI{3000}{ft}). Ceci implique que l'avion se stabilise environ \SI{50}{ft} sous son altitude cible. On peut corriger cela naïvement en règlant le seuil du bloc \texttt{Switch} (un seuil à \SI{17}{m} fonctionne), ou en implémentant un loi qui gère plus finement la capture de l'altitude.
+
+	\section{Intégration des différentes lois de commandes}
+
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_nonlineaire_final.png}}
+		\caption{Schéma de l'intégration de toutes les lois de commande}
+		\label{fig:schema_final}
+	\end{figure}
 	
+
+	\begin{figure}[H]
+		\centering
+		\begin{subfigure}[b]{\textwidth}
+			\includegraphics[width=\textwidth]{schema_OpenDescent_final.png}
+			\caption{Schéma de la commande Open Descent}
+			\label{fig:schema_OpenDescent_final}
+		\end{subfigure}
+		\begin{subfigure}[b]{0.6\textwidth}
+			\includegraphics[width=\textwidth]{schema_PID_final.png}
+			\caption{Schéma du contrôleur PID}
+			\label{fig:schema_PID_final}
+		\end{subfigure}
+		\begin{subfigure}[b]{\textwidth}
+			\includegraphics[width=\textwidth]{schema_LF_final.png}
+			\caption{Schéma de la commande Level Flight}
+			\label{fig:schema_LF_final}
+		\end{subfigure}
+		\caption{Schémas des différentes commandes internes}
+		\label{fig:schemas_commandes_final}
+	\end{figure}
+
 	\section{Analyse des résultats globaux}
 	La simulation complète montre une descente fluide à \SI{260}{kts} EAS. Lors de l'approche du FL30 :
 	\begin{enumerate}
@@ -427,6 +471,29 @@ font=\normalfont\large\bfseries]{subsection}
 		\item L'avion se stabilise aux nouvelles consignes sans dépassement excessif, validant la robustesse des correcteurs sur le modèle non-linéaire.
 	\end{enumerate}
 	
+	\
+
+	\begin{figure}[H]
+		\centering
+		\begin{subfigure}[b]{0.4\textwidth}
+			\includegraphics[width=\textwidth]{reponse_ALT_400.png}
+			\caption{Courbe de suivi de l'altitude}
+			\label{fig:reponse_finale_ALT}
+		\end{subfigure}
+		\begin{subfigure}[b]{0.4\textwidth}
+			\includegraphics[width=\textwidth]{reponse_EAS_400.png}
+			\caption{Courbe de suivi de la vitesse.}
+			\label{fig:reponse_finale_EAS_long}
+		\end{subfigure}
+		\begin{subfigure}[b]{0.4\textwidth}
+			\includegraphics[width=\textwidth]{reponse_EAS_294-314.png}
+			\caption{Courbe de suivi de la vitesse à la capture du niveau FL30}
+			\label{fig:reponse_finale_EAS_short}
+		\end{subfigure}
+		\caption{Courbes d'altitude et de vitesse pendant la descente au niveau FL30}
+		\label{fig:reponse_descente_final}
+	\end{figure}
+
 	%----------------------------------------------------------
 	\chapter{Conclusion}
 	%----------------------------------------------------------
