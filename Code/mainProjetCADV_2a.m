@@ -1,11 +1,11 @@
-clear all
+%% initiation
 close all
 %bdclose all %Close any or all Simulink systems
 clc
 
 %Conversion des unités
 KTS2MS = 1852 / 3600;
-FL2M = 30.48 ;
+FL2M = 30.48;
 RAD2DEG = 180/pi;
 DEG2RAD = pi/180.;
 FPM2MS = 0.3048/60;
@@ -29,6 +29,8 @@ TOTAL_CMD = 3;
 %Choix de l'équipe
 groupe = 'golf' %rentrer son groupe
 [aircraftChosen, aircraftName, hTrimFL, Eas_KTS, ms, km] = utGetTrimPoint(groupe);
+
+%% Commande Classique (de l'assiette)
 
 VaTrim = utEas2Tas(Eas_KTS*KTS2MS, hTrimFL*FL2M);
 hTrim = hTrimFL*FL2M;
@@ -59,44 +61,51 @@ xdotTrim = utAcDynamicsFunction(xTrim,uTrim,aircraftChosen,km,ms);
 [A, B, C, D] = linmod('acDynModel_ToLinearize_2015',xTrim, uTrim);
 
 
-A4 = A(iVa:iq, iVa:iq);
+A4 = A(iVa:iq, iVa:iq); % on tronque afin de simplifier le système (on ne veut pas l'altitude ou position)
 B4 = B(iVa:iq, idelevator);
 
 C4 = [0, 0, 1, 0];
 D4 = 0;
 
 [state4num, state4den] = ss2tf(A4, B4, C4, D4);
-state4 = tf(state4num, state4den);
+state4 = tf(state4num, state4den); % on obtient une fonction de transfert SISO pour controler l'assiette
+
+% Vérification de la controlabilité et observabilité du système
+ctrPID = rank(ctrb(A4,B4));
+obsPID = rank(obsv(A4,C4));
+nPID = size(A4,1);
+
+if ctrPID < nPID, disp('PID non contrôlable'); end
+if obsPID < nPID, disp('PID non observable'); end
+
 
 % Calcul des modes de A4
 modes4 = eig(A4);
 [Wn, zeta] = damp(A4);
-% Nom des modes ? Deux pôles normaux et deux pôles très lents, principalement oscillatoires ? 
-% Mode phugoïde
 
 % Specifications 
 ts = 3; % secondes
-D = 0.05; %
+D = 0.05; % dépassement de 5% toléré
 [Kp, Ki, Kd, m, w0, dp] = utWang(state4, ts, D, -5.66); % On prend Kp = - 5.66, par lecture du root locus
 
 % Préfiltre
-FTBF_in = feedback(state4, tf([Kp, 0], 1)); % Fonction de transfert 'interne'
+FTBF_in = feedback(state4, tf([Kp, 0], 1)); % Fonction de transfert 'interne' pour assiette
 FTBF = feedback(tf([Kp, Ki], [1, 0])*FTBF_in, 1);
 pole(FTBF);
 zero(FTBF);
 
-minFTBF = minreal(FTBF, 1e-4);
+minFTBF = minreal(FTBF, 1e-4); %nous avons un pole à presque zero qu'il faut enlever
 
 q = minFTBF.den{1}; % Dénominateur de la FTBF
-Cpf = tf(q(end), minFTBF.num{1});
-Cpf1 = tf(1,[dp,1]);
+Cpf = tf(q(end), minFTBF.num{1}); % préfiltre d'ordre 2
+Cpf1 = tf(1,[dp,1]); % préfiltre d'ordre 1
 
 
-%% Commande par retour d'état
+%% Commande Modale (de la vitesse pilotée via l'assiette)
 
 % Linearisation
 
-% Vecteur d'etat au point de trim
+% Vecteur d'etat au point de trim pour commande modale
 xTrimcm = zeros(8, 1);
 xTrimcm(ihp) = hTrim; %m
 xTrimcm(iVa) = VaTrim; %m/sec
@@ -109,19 +118,22 @@ uTrimcm = 0;
 % Linearisation autour du point de trim
 [Acm, Bcm, Ccm, Dcm] = linmod('Golf_Nonlin_Classique',xTrimcm, uTrimcm);
 
-% Commandablite du systeme
-rank(ctrb(Acm,Bcm));
+% Commandablite et Observabilité du systeme
+ctrClassique = rank(ctrb(Acm,Bcm));
+obsClassique = rank(obsv(Acm,Ccm));
+nClassique = size(Acm,1);
+if ctrClassique < nClassique, disp('Système non contrôlable'); end
+if obsClassique < nClassique, disp('Système non observable'); end
 
-% Observabilité du systeme
-rank(obsv(Acm,Ccm));
 
-A6 = Acm(iVa:end, iVa:end);
-B6 = Bcm(iVa:end);
+A6 = Acm(iVa:end, iVa:end); % on tronque pour simplifier le système
+B6 = Bcm(iVa:end); 
 C6 = Ccm(iVa:end, iVa:end);
 C6_pour_h = Ccm(iVa, iVa:end);
 pA6 = eig(A6);
 K6 = place(A6,B6,[dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6]); % On a observé les pôles (-3.3965 + 0.1541i, -3.3965 - 0.1541i) dans eig
-% On se contente de les conserver ici, pour soulager les actionneurs.
+% On se contente de les conserver ici, pour soulager les actionneurs. On a
+% les poles désirés et aussi des poles rapides.
 % Inutile de lutter contre ces derniers.
 
 % On doit identifier quelle ligne de C6 correspond à Va pour l'intégrateur
@@ -136,11 +148,6 @@ C_Va(1) = 1; % On extrait Va
 A_aug = [A6, zeros(size(A6,1), 1); -C_Va, 0];
 
 B_aug = [B6; 0];
-
-% Vérification de commandabilité
-if rank(ctrb(A_aug, B_aug)) < size(A_aug, 1)
-	error("Le système augmenté n'est pas commandable");
-end
 
 % Calcul des gains sur le système augmenté (taille 7)
 % On ajoute un pôle pour l'intégrateur
@@ -157,8 +164,12 @@ K_i = K_aug(end);% Gain pour l'intégrateur
 H = -inv(C6_pour_h*inv(A6-B6*K6)*B6);
 
 Cobs = [C6(1,:); C6(3,:); C6(4,:)];
-obs = rank(obsv(A6,Cobs))
-ctr = rank(ctrb(A6,B6))
+obsLuenberger = rank(obsv(A6,Cobs));
+ctrLuenberger = rank(ctrb(A6,B6));
+nLuenberger = size(A6,1);
+if ctrLuenberger < nLuenberger, disp('Estimateur Luenberger non contrôlable'); end
+if obsLuenberger < nLuenberger, disp('Estimateur Luenberger non observable'); end
+
 
 L6t = place(A6', Cobs', poles_desires(1:6));
 L6 = L6t';
@@ -199,6 +210,13 @@ uTrimLF(idelevator) = 0;
 xdotTrimLF = utAcDynamicsFunction(xTrimLF,uTrimLF,aircraftChosen,km,ms);
 [Alf, Blf, Clf, Dlf] = linmod('acDynModel_ToLinearize_2015',xTrimLF, uTrimLF);
 
+% Vérification de controlabilité et observabilité du système linéarisé
+ctrMIMO = rank(ctrb(Alf,Blf));
+obsMIMO = rank(obsv(Alf,Clf));
+nMIMO = size(Alf);
+if ctrMIMO < nMIMO, disp('Système MIMO non contrôlable'); end
+if obsMIMO < nMIMO, disp('Système MIMO non observable'); end
+
 % Extraction pour LQT
 idx_states = iVa:iq; 
 idx_inputs = ithr:idelevator; % Entrées : Poussée et Gouverne
@@ -235,7 +253,7 @@ Baug = [B_sys; zeros(2,2)];
 
 Caug = [C_sys, -Cr];
 
-Daug = zeros(2,2)
+Daug = zeros(2,2);
 
 N = [Aaug, Baug;
     Caug, zeros(2,2)];
@@ -246,17 +264,12 @@ n_ref = size(Ar, 1);       % 2
 n_inputs = size(B_sys, 2); % 2
 n_outputs = size(C_sys, 1);% 2
 
-% Vérification que N est inversible
-if rank(N) < size(N, 1)
-    warning('La matrice N est singulière, vérifier la commandabilité/observabilité statique.');
-end
-
 % Suite Commande Optimale/MIMO : Calcul des gains LQT
 
 % Définition des poids pour le critère quadratique J
 % Q : Pénalise l'erreur de suivi e = y - yr
-q_Va = 1000;%1 / (40)^2;      % Erreur en vitesse % 40 pour le linéaire marche bien
-q_gamma = 1000;%1 / (0.01)^2; % On veut tolérer 0.01 rad (environ 0.5 deg) d'erreur
+q_Va = 1000; %1 / (40)^2;      % Erreur en vitesse % 40 pour le linéaire marche bien
+q_gamma = 1000; %1 / (0.01)^2; % On veut tolérer 0.01 rad (environ 0.5 deg) d'erreur
 Q = diag([q_Va, q_gamma]);
 
 % R : Pénalise l'effort de commande u
@@ -277,6 +290,12 @@ Q_aug = Caug' * Q * Caug;
 Kx = K_aug(:, 1:4); % Gain de retour d'état (sur Va, alpha, theta, q)
 Kr = K_aug(:, 5:6); % Gain sur l'état du modèle de référence
 
+%Vérification de l'observabilité et commandabilité du préfiltre optimal
+ctrOPT = rank(ctrb(Ar,Br));
+obsOPT = rank(obsv(Ar,-Kr));
+nOPT = size(Ar,1);
+if ctrOPT < nOPT, disp('Préfiltre optimal non contrôlable'); end
+if obsOPT < nOPT, disp('Préfiltre optimal non observable'); end
 
 % Vecteur second membre pour r_ss (Eq 3.71 modifiée)
 % Le système est : N * Z = [0; -Br; 0] * r_ss
@@ -298,10 +317,6 @@ Nu = M(end-n_inputs+1:end, :);     % Relation u_ss / r_ss
 % Dpf assure que u_ss est cohérent avec la référence
 Dpf = K_aug * [Nx; Nxr] + Nu;
 
-disp('Gains LQT calculés.');
-disp('Kx (Etat) :'); disp(Kx);
-disp('Kr (Reference) :'); disp(Kr);
-disp('Dpf (Pre-filtre) :'); disp(Dpf);
 
 
 
