@@ -129,22 +129,18 @@ if obsClassique < nClassique, disp('Système non observable'); end
 A6 = Acm(iVa:end, iVa:end); % on tronque pour simplifier le système
 B6 = Bcm(iVa:end); 
 C6 = Ccm(iVa:end, iVa:end);
-C6_pour_h = Ccm(iVa, iVa:end);
-pA6 = eig(A6);
+C6_pour_h = Ccm(iVa, iVa:end); % on veut stabiliser la vitesse
+pA6 = eig(A6); % on trouve des poles à presque zero qu'il faut changer
 K6 = place(A6,B6,[dp, conj(dp), -3.3965 + 0.1541i, -3.3965 - 0.1541i, -5, -6]); % On a observé les pôles (-3.3965 + 0.1541i, -3.3965 - 0.1541i) dans eig
 % On se contente de les conserver ici, pour soulager les actionneurs. On a
 % les poles désirés et aussi des poles rapides.
-% Inutile de lutter contre ces derniers.
+% Inutile de lutter contre les poles de eig
 
 % On doit identifier quelle ligne de C6 correspond à Va pour l'intégrateur
-% Dans A6, l'ordre est [Va, alpha, theta, q, ...]. Donc Va est le 1er état.
 C_Va = zeros(1, size(A6, 2));
 C_Va(1) = 1; % On extrait Va
 
 % Création du système augmenté (Ajout de l'état intégrateur)
-% xi_point = Ref - Mesure = 0 - Va (en régulation autour de 0) -> -C_Va * x
-% x_point  = A6*x + B6*u
-
 A_aug = [A6, zeros(size(A6,1), 1); -C_Va, 0];
 
 B_aug = [B6; 0];
@@ -163,9 +159,12 @@ K_i = K_aug(end);% Gain pour l'intégrateur
 % Precommande
 H = -inv(C6_pour_h*inv(A6-B6*K6)*B6);
 
-Cobs = [C6(1,:); C6(3,:); C6(4,:)];
+% Estimateur
+Cobs = [C6(1,:); C6(3,:); C6(4,:)]; %on veut se servir de la vitesse, de l'assiette, et le tangage
+
+%Vérification de l'observabilité et controlabilité de l'estimateur
 obsLuenberger = rank(obsv(A6,Cobs));
-ctrLuenberger = rank(ctrb(A6,B6));
+ctrLuenberger = rank(ctrb(A6, B6));
 nLuenberger = size(A6,1);
 if ctrLuenberger < nLuenberger, disp('Estimateur Luenberger non contrôlable'); end
 if obsLuenberger < nLuenberger, disp('Estimateur Luenberger non observable'); end
