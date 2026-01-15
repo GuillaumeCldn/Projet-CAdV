@@ -16,6 +16,8 @@
 \usepackage{microtype}
 \usepackage{float}
 \usepackage{fmtcount}
+\usepackage{enumitem}
+\usepackage{scrhack}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, matrix, decorations.pathreplacing, calc}
 \usepackage{wrapfig}
@@ -74,36 +76,51 @@ font=\normalfont\large\bfseries]{subsection}
 	% WARN: Le document ne doit pas faire plus de 20 pages!
 	
 	% ---------------------------------------------------------
+	% ---------------------------------------------------------
 	\maketitle
 	\tableofcontents
-	\nopagebreak
+	
+	\newpage
+	\begingroup
+	
+	\let\clearpage\relax
+	\let\cleardoublepage\relax
+	
+	\KOMAoptions{listof=leveldown, bibliography=leveldown}
+	
 	\listoffigures
+	\vspace{1cm} % Ajuster cette valeur selon le remplissage de la page
+	
 	\listoftables
-	%\clearpage
+	\vspace{1cm}
+	
 	\bibliographystyle{plain-fr}
 	\bibliography{rapportCAdV}
+	\endgroup
+	\clearpage
+	
 	%----------------------------------------------------------
 	
 	%----------------------------------------------------------
 	\chapter{Introduction}
 	%----------------------------------------------------------
-	Le but de ce projet est d'implémenter une loi de descente pour un avion de ligne. Cet avion est en vol stabilisé à un niveau de vol (FL) et une vitesse équivalente (\emph{EAS}) qui dépendent de chaque groupe. Il est autorisé par le contrôle aérien à descendre jusqu'au niveau $30$, où il se stabilise à une vitesse de \SI{230}{kts} \cite[4.1]{Sujet}. Le comportement de cette loi est synthétisé dans le schéma suivant:
+	Le but de ce projet est d'implémenter une loi de descente pour un avion de ligne. Cet avion est en vol stabilisé à un niveau de vol (FL) et une vitesse équivalente (\emph{EAS}) qui dépendent de chaque groupe. Il est autorisé par le contrôle aérien à descendre jusqu'au niveau $30$, où il se stabilise à une vitesse de \SI{230}{kts}~\cite[4.1]{Sujet}. Le comportement de cette loi est synthétisé dans le schéma suivant :
 	
 	\begin{figure}[H]
 		\centering
 		\includegraphics[width=\textwidth]{schema_sujet.png}
-		\caption{Comportement de la loi de descente \cite[Fig 4.1]{Sujet}}
+		\caption{Comportement de la loi de descente~\cite[Fig 4.1]{Sujet}}
 		\label{fig:schema_sujet}
 	\end{figure}
 	
-	Dans le cadre de ce projet, on ne considère que l'axe longitudinal de l'avion, on néglige l'influence des commandes de roulis et de lacet. Le modèle de l'avion est donc commandé par trois entrées \cite[4.3]{Sujet}:
+	Dans le cadre de ce projet, on ne considère que l'axe longitudinal de l'avion, on néglige l'influence des commandes de roulis et de lacet. Le modèle de l'avion est donc commandé par trois entrées~\cite[4.3]{Sujet} :
 	\begin{itemize}
-		\item $\delta_{\text{PHR}}$: le braquage du plan horizontal réglable (PHR)
-		\item $\delta_{el}$: le braquage de la gouverne de profondeur
-		\item $\delta_{\text{THR}}$: la position de la manette de poussée
+		\item $\delta_{\text{PHR}}$ : le braquage du plan horizontal réglable (PHR)
+		\item $\delta_{el}$ : le braquage de la gouverne de profondeur
+		\item $\delta_{\text{THR}}$ : la position de la manette de poussée
 	\end{itemize}
 	
-	Pour remplir ce cahier des charges, nous allons découper la commande de l'avion en trois sous-commandes distinctes:
+	Pour remplir ce cahier des charges, nous allons découper la commande de l'avion en trois sous-commandes distinctes :
 	\begin{itemize}
 		\item \textbf{La commande de l'assiette} pour laquelle on implémentera une commande classique ;
 		\item \textbf{La loi de descente} pour laquelle on implémentera une commande modale ;
@@ -120,7 +137,7 @@ font=\normalfont\large\bfseries]{subsection}
 	
 	\begin{table}[H]
 		\centering	
-		\caption{Paramètres caractéristiques de l'A320 (Groupe Golf) \cite[Tab 2.1]{Sujet}}
+		\caption{Paramètres caractéristiques de l'A320 (Groupe Golf)~\cite[Tab 2.1]{Sujet}}
 		\label{tab:parametres}
 		\begin{tabular}{l l}
 			\toprule
@@ -135,7 +152,7 @@ font=\normalfont\large\bfseries]{subsection}
 	\end{table}
 	
 	\section{Point de fonctionnement (Trim)}
-	Conformément au scénario \textit{Open Descent} décrit dans le sujet \cite{Sujet}, la poussée est maintenue fixe sur la position \emph{Idle}. Le calcul du point d'équilibre (\textit{trim}) a été réalisé via la fonction \texttt{utComputeTrimIdle}. Pour l'avion assigné à l'équipe Golf, le point d'équilibre obtenu est :
+	Conformément au scénario \textit{Open Descent} décrit dans le sujet~\cite{Sujet}, la poussée est maintenue fixe sur la position \emph{Idle}. Le calcul du point d'équilibre (\textit{trim}) a été réalisé via la fonction \texttt{utComputeTrimIdle}. Pour l'avion assigné à l'équipe Golf, le point d'équilibre obtenu est :
 	\begin{itemize}
 		\item Altitude : \SI{15000}{ft} (\SI{4572}{m})
 		\item Vitesse vraie ($V_a$) : $\approx$ \SI{139}{m/s} (pour \SI{260}{kts} EAS)
@@ -174,10 +191,10 @@ font=\normalfont\large\bfseries]{subsection}
 	\chapter{Commande de l'assiette (Boucle Interne)}
 	%----------------------------------------------------------
 	
-	Ce chapitre détaille la conception de la boucle interne de pilotage, dont l'objectif est d'asservir l'assiette longitudinale $\theta$ de l'avion via la gouverne de profondeur $\delta_{el}$ \cite[4.5]{Sujet}.
+	Ce chapitre détaille la conception de la boucle interne de pilotage, dont l'objectif est d'asservir l'assiette longitudinale $\theta$ de l'avion via la gouverne de profondeur $\delta_{el}$~\cite[4.5]{Sujet}.
 	
 	\section{Synthèse du correcteur}
-Nous avons retenu une structure de commande classique de type PI-D (Proportionnel Intégral, Dérivée sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang, présentée dans le sujet au paragraphe 3.5.1 du sujet \cite{Sujet} et dans l'article de \emph{Wang et al.} \cite{Wang2009}. La méthode de Wang demande un placement d'un pôle supplémentaire pour calculer les gains du PI-D. Nous avons choisi celui ci avec un graphique 'root-locus' en cherchant un pôle qui est plus rapide que les actuels afin de ne pas affecter la dynamique du système. En regardant la Figure ci dessous, on peut constater que un pôle à -5.66 satisfait ce critère.
+	Nous avons retenu une structure de commande classique de type PI-D (Proportionnel, Intégral, Dérivé sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang, présentée dans le sujet au paragraphe 3.5.1~\cite{Sujet} et dans l'article de \emph{Wang et al.}~\cite{Wang2009}. La méthode de Wang demande le placement d'un pôle supplémentaire pour calculer les gains du PI-D. Nous avons choisi celui-ci avec un graphique \og root-locus\fg{} (lieu des racines) en cherchant un pôle qui est plus rapide que les actuels afin de ne pas affecter la dynamique du système. En regardant la figure ci-dessous, on peut constater qu'un pôle à $-5.66$ satisfait ce critère.
 	
 	Conformément au cahier des charges, nous avons conservé les spécifications initiales pour la méthode de Wang, à savoir :
 	\begin{equation}
@@ -190,9 +207,9 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	
 	Les structures de commande ont été implémentées sous Simulink pour le modèle linéarisé (servant à la synthèse) et le modèle non-linéaire complet (servant à la validation).
 	
-	\begin{figure}[htbp] 
+	\begin{figure}[htbp]
 		\centering
-		\begin{subfigure}[b]{0.85\textwidth}
+		\begin{subfigure}[b]{0.85\textwidth} 
 			\centering
 			\includegraphics[width=\textwidth]{schema_lineaire_assiette.png}
 			\caption{Système linéarisé}
@@ -206,34 +223,42 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 			\caption{Système non-linéaire (Avion naturel)}
 		\end{subfigure}
 		
-		\vspace{-0.5em} 
+		\vspace{-0.5em}
 		\caption{Schémas Simulink de la boucle de tenue d'assiette}
 		\label{fig:schemas_assiette}
 	\end{figure}
 	
-	Afin de valider la synthèse et la qualité de la linéarisation, nous avons superposé la réponse indicielle des deux modèles pour une consigne en échelon d'amplitude \SI{5}{\degree} partant du point de trim.
+	\vspace{0.5cm}
+	Afin de valider la synthèse, nous avons superposé la réponse indicielle des deux modèles pour une consigne de \SI{5}{\degree}.
 	
 	\begin{figure}[htbp]
 		\centering
-		\makebox[\textwidth][c]{\includegraphics[trim={0 0 0 0.82cm}, clip, width=1.1\textwidth]{reponse_bilineaire_assiette.png}}
-		\vspace{-1em} 
-		\caption{Comparaison des réponses indicielles (Linéaire vs Non-linéaire)}
-		\label{fig:reponse_bilineaire_assiette}
+		\begin{minipage}[c]{0.58\textwidth}
+			\centering
+			\includegraphics[trim={0 0 0 0.82cm}, clip, width=\linewidth]{reponse_bilineaire_assiette.png}
+			\caption{Comparaison des réponses indicielles (Linéaire vs Non-linéaire)}
+			\label{fig:reponse_bilineaire_assiette}
+		\end{minipage}
+		\hfill
+		\begin{minipage}[c]{0.38\textwidth}
+			\small 
+			\raggedright
+			L'analyse de la figure~\ref{fig:reponse_bilineaire_assiette} suggère :
+			
+			\begin{enumerate}[leftmargin=*] 
+				\item \textbf{Spécifications :} Temps de réponse $\approx \SI{3}{s}$, dépassement $\approx 5\%$ (pic à $\approx \SI{5.25}{\degree}$).
+				\item \textbf{Validité :} Superposition parfaite des courbes rouge et bleue. La linéarisation est valide pour les faibles amplitudes ($5^\circ$).
+			\end{enumerate}
+		\end{minipage}
 	\end{figure}
 	
-	L'analyse de la figure \ref{fig:reponse_bilineaire_assiette} suggère deux commentaires majeurs :
-	\begin{enumerate}
-		\item \textbf{Respect des spécifications :} Le temps de réponse à 5\% est bien de l'ordre de 3 secondes et le dépassement correspond aux 5\% attendus (pic à $\approx \SI{5.25}{\degree}$).
-		\item \textbf{Validité du modèle :} Les courbes rouge (modèle linéaire) et bleue (modèle non-linéaire) sont parfaitement superposées. Cela confirme que pour des amplitudes faibles (voisines de 5°), la linéarisation autour du point de trim est une excellente approximation de la dynamique réelle de l'avion.
-	\end{enumerate}
 	
 	
-		
 	%----------------------------------------------------------
 	\chapter{Loi de descente (Open Descent)}
 	%----------------------------------------------------------
 	
-	L'objectif de la loi de descente est de maintenir une vitesse équivalente (EAS) constante en agissant sur la consigne d'assiette $\theta_c$, la poussée restant figée à \emph{Idle} \cite[4.6]{Sujet}.
+	L'objectif de la loi de descente est de maintenir une vitesse équivalente (EAS) constante en agissant sur la consigne d'assiette $\theta_c$, la poussée restant figée à \emph{Idle}~\cite[4.6]{Sujet}.
 	
 	\section{Stratégie de commande modale}
 	La linéarisation est effectuée sur le modèle Simulink \texttt{acDynModelGolfTenueClassique}, qui inclut déjà la boucle interne d'assiette. Le système linéarisé $A_6$ est d'ordre 6 et correspond au vecteur d'état suivant :
@@ -242,25 +267,25 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	\end{equation}
 	Où $x_{\text{pid}}$ et $x_{\text{pf}}$ sont les états internes du correcteur PI-D et du pré-filtre de la boucle interne.
 	La commandabilité de ce système augmenté a été vérifiée via le rang de la matrice de commandabilité (fonction MatLab \texttt{ctrb}).
-
-	La commande modale consite à choisir les pôles du système bouclé pour influencer le comportement de ses modes. La fonction MatLab \texttt{place} permet de calculer le gain du retour d'état qui sera utilisé pour commander le système (on note ce gain $K_x$).
-
-	Le retour d'état seul ne permet pas de commander le système, on ajoute une précommande pour adapter la commande au retour d'état. La précommande est calculée ainsi \cite[eq. 3.50]{Sujet}:
-
+	
+	La commande modale consiste à choisir les pôles du système bouclé pour influencer le comportement de ses modes. La fonction MatLab \texttt{place} permet de calculer le gain du retour d'état qui sera utilisé pour commander le système (on note ce gain $K_x$).
+	
+	Le retour d'état seul ne permet pas de commander le système, on ajoute une précommande pour adapter la commande au retour d'état. La précommande est calculée ainsi~\cite[eq. 3.50]{Sujet}:
+	
 	\begin{equation}
-		H = -(C \cdot (A-B K)^{-1}\cdot B)^{-1} 
+		H = -(C \cdot (A-B K)^{-1}\cdot B)^{-1}
 	\end{equation}
 	\pagebreak
-
-	L'architecture de commande du système est illustrée ci-dessous:
-
+	
+	L'architecture de commande du système est illustrée ci-dessous :
+	
 	\begin{figure}[H]
 		\centering
 		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_modale_prefiltre.png}}
 		\caption{Schéma Simulink de la commande avec préfiltre $H$}
 		\label{fig:modale_prefiltre}
 	\end{figure}
-
+	
 	\section{Observateur d'état}
 	Pour implémenter cette loi de commande par retour d'état, nous devons connaître l'ensemble du vecteur d'état $x$. Or, certaines grandeurs comme l'incidence $\alpha$ ne sont pas toujours mesurées directement ou sont bruitées.
 	
@@ -275,7 +300,7 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	L'observabilité de la paire $(A_6, C_{\text{obs}})$ a été validée (rang plein).
 	
 	Pour le calcul du gain $L$, bien que la théorie suggère généralement une dynamique d'erreur d'estimation plus rapide que celle de la commande, nous avons choisi de placer les pôles de l'observateur sur les mêmes dynamiques que celles du système en boucle fermée (vecteur \texttt{poles\_desires(1:6)}). Ce choix vise à limiter l'amplification du bruit de mesure sur les états estimés, notamment sur l'incidence $\alpha$. D'après les tests effectués, ce réglage s'est avéré satisfaisant pour notre application et une dynamique plus rapide n'a pas semblé nécessaire.
-
+	
 	\section{Choix des pôles}
 	Pour calculer le gain du retour d'état, nous avons choisi les pôles suivants :
 	\begin{itemize}
@@ -283,8 +308,8 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 		\item \textbf{Modes rapides} : Pôles complexes conjugués conservés vers $-3.4 \pm 0.15i$ (observés dans la matrice $A_6$ via la fonction MatLab \texttt{eig}). Nous avons choisi de ne pas modifier ces modes naturels pour éviter de solliciter inutilement les actionneurs.
 		\item \textbf{Pôles réels de réglage} : Fixés à $-3$ et $-4$.
 	\end{itemize}
-
-	La simulation de la commande modale donne le résultat suivant:
+	
+	La simulation de la commande modale donne le résultat suivant :
 	
 	\begin{figure}[H]
 		\centering
@@ -292,21 +317,21 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 		\caption{Réponse de la commande modale à une consigne en échelon d'amplitude 3}
 		\label{fig:reponse_modale_prefiltre}
 	\end{figure}
-
-% TODO: Détailler
-	La réponse de cette commande n'est pas du tout satisfaisante: l'erreur statique est de l'ordre de $2.42$.
-
+	
+	% TODO: Détailler
+	La réponse de cette commande n'est pas du tout satisfaisante : l'erreur statique est de l'ordre de $2.42$.
+	
 	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
-	Pour pallier les limitations de la précommande seule, le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse \cite[3.6.2]{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
+	Pour pallier les limitations de la précommande seule, le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse~\cite[3.6.2]{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
 	Nous avons donc augmenté le système avec un état intégrateur $\xi$ défini par :
 	\begin{equation}
 		\dot{\xi} = V_{\text{EAS,cons}} - V_{\text{EAS,mes}}
 	\end{equation}
-
+	
 	On choisit pour l'intégrateur un pôle à $-10.33$, ce qui assure une élimination rapide de l'erreur statique, et vérifie la contrainte de stabilité imposée ($\text{Re} < -1.3$).
-
-	Le schéma de la commande modale avec intégrateur appliquée au système linéaire est illustrée ci-dessous:
-
+	
+	Le schéma de la commande modale avec intégrateur appliquée au système linéaire est illustré ci-dessous :
+	
 	\begin{figure}[H]
 		\centering
 		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_lineaire_modale.png}}
@@ -314,20 +339,20 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 		\label{fig:schema_lineaire_modale}
 	\end{figure}
 	
-	La simulation de la commande modale avec intégrateur donne le résultat suivants:
+	La simulation de la commande modale avec intégrateur donne le résultat suivant :
 	\begin{figure}[H]
 		\centering
 		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_lineaire_modale_integrateur.png}}
 		\caption{Réponse de la commande modale à une consigne en échelon d'amplitude 3}
 		\label{fig:reponse_modale_integrateur}
 	\end{figure}
-
-	Cette réponse est satisafaisante: le système répond en environ \SI{3.5}{s} et avec un dépassement de l'ordre de \SI{6}{\%}. Nous avons donc implémenté cette commande sur le modèle non linéaire.
-
+	
+	Cette réponse est satisfaisante : le système répond en environ \SI{3.5}{s} et avec un dépassement de l'ordre de \SI{6}{\%}. Nous avons donc implémenté cette commande sur le modèle non linéaire.
+	
 	\section{Modèle non linéaire}
-
-	Le schéma suivant illustre l'intégration de la commande modale sur le système non linéaire. Nous avons conservé la possibilité d'alterner entre la précomande $H$ et l'intégrateur, même si l'intégrateur se révèle être supérieur. Il est aussi important de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
-
+	
+	Le schéma suivant illustre l'intégration de la commande modale sur le système non linéaire. Nous avons conservé la possibilité d'alterner entre la précommande $H$ et l'intégrateur, même si l'intégrateur se révèle être supérieur. Il est aussi important de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
+	
 	\begin{figure}[H]
 		\centering
 		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{schema_nonlineaire_modale.png}}
@@ -336,8 +361,8 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	\end{figure}
 	
 	\section{Résultats de simulation}
-	La validation sur le modèle non-linéaire (sur une durée de \SI{60}{s}) démontre le bon fonctionnement de la loi. On observe la sur la figure \ref{fig:resultat_vitesse} que le système non linéaire répond de façon adéquate à un échelon d'amplitude \SI{2}{kts}.
-
+	La validation sur le modèle non-linéaire (sur une durée de \SI{60}{s}) démontre le bon fonctionnement de la loi. On observe sur la figure~\ref{fig:resultat_vitesse} que le système non linéaire répond de façon adéquate à un échelon de consigne d'amplitude \SI{2}{kts}.
+	
 	\begin{figure}[H]
 		\centering
 		\includegraphics[width=\textwidth]{resultat_vitesse.png}
@@ -350,23 +375,23 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	%----------------------------------------------------------
 	
 	Pour la phase de stabilisation au niveau 30, l'avion doit maintenir simultanément son altitude et sa vitesse aérodynamique de \SI{230}{kts}. Il s'agit d'un problème multi-variable (MIMO) où la poussée $\delta_{thr}$ et la profondeur $\delta_{el}$ sont utilisées conjointement.
-
+	
 	\section{Linéarisation}
-
-	Pour metttre en œuvre la commande, on linéarise le modèle avion au nouveau point de trim: \SI{230}{kts} et \SI{3000}{ft}. Cette linéarisation est réalisée par \texttt{utAcDynamicsFunction.m} et donne le point de fonctionnement suivant: 
+	
+	Pour mettre en œuvre la commande, on linéarise le modèle avion au nouveau point de trim : \SI{230}{kts} et \SI{3000}{ft}. Cette linéarisation est réalisée par \texttt{utAcDynamicsFunction.m} et donne le point de fonctionnement suivant :
 	\begin{equation}
 		\text{trimValLF} = \left( \begin{array}{c}
-				\delta_{\text{PHR}} \\
-				\alpha_{\text{trim}} \\
-				\delta_{\text{THR}}
-		\end{array} \right) = 
+			\delta_{\text{PHR}} \\
+			\alpha_{\text{trim}} \\
+			\delta_{\text{THR}}
+		\end{array} \right) =
 		\left( \begin{array}{c}
-				\SI{-10.0}{\degree} \\
-				\SI{3.6}{\degree} \\
-				\SI{0.25}{\%}	
+			\SI{-10.0}{\degree} \\
+			\SI{3.6}{\degree} \\
+			\SI{0.25}{\%}	
 		\end{array} \right)
 	\end{equation}
-
+	
 	\section{Synthèse par commande optimale (LQT)}
 	Nous avons implémenté une structure \textit{Linear Quadratic Tracker} (LQT) pour minimiser l'erreur de suivi entre la sortie du système $y$ et un modèle de référence $y_r$. Le critère à minimiser est défini par :
 	\begin{equation}
@@ -392,7 +417,7 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 	%----------------------------------------------------------
 	
 	\section{Gestion de la transition}
-	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition est déclenchée lors de la capture de l'altitude cible (\SI{3000}{ft}). 
+	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition est déclenchée lors de la capture de l'altitude cible (\SI{3000}{ft}).
 	
 	\section{Analyse des résultats globaux}
 	La simulation complète montre une descente fluide à \SI{260}{kts} EAS. Lors de l'approche du FL30 :
@@ -412,6 +437,6 @@ Nous avons retenu une structure de commande classique de type PI-D (Proportionne
 		\item La commande optimale MIMO offre une bien meilleure gestion des interactions entre les axes que la simple juxtaposition de boucles SISO.
 	\end{itemize}
 	
-	\paragraph{Limites et perspectives} 
+	\paragraph{Limites et perspectives}
 	Pour améliorer le réalisme, il serait nécessaire d'intégrer des saturations sur les vitesses de déflexion des gouvernes (\SI{15}{\degree/s} pour la profondeur) et de prendre en compte la dynamique plus lente du PHR par rapport à la gouverne de profondeur.
 \end{document}
