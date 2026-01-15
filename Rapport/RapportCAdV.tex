@@ -79,7 +79,7 @@ font=\normalfont\large\bfseries]{subsection}
 	\nopagebreak
 	\listoffigures
 	\listoftables
-	\clearpage
+	%\clearpage
 	\bibliographystyle{plain-fr}
 	\bibliography{rapportCAdV}
 	%----------------------------------------------------------
@@ -177,7 +177,7 @@ font=\normalfont\large\bfseries]{subsection}
 	Ce chapitre détaille la conception de la boucle interne de pilotage, dont l'objectif est d'asservir l'assiette longitudinale $\theta$ de l'avion via la gouverne de profondeur $\delta_{el}$ \cite[4.5]{Sujet}.
 	
 	\section{Synthèse du correcteur}
-Nous avons retenu une structure de commande classique de type PI-D (Proportionnel Intégral, Dérivée sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang, présentée dans le sujet au paragraphe 3.5.1 du sujet \cite{Sujet} et dans l'article de \emph{Wang et al.} \cite{Wang2009}.
+Nous avons retenu une structure de commande classique de type PI-D (Proportionnel Intégral, Dérivée sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang, présentée dans le sujet au paragraphe 3.5.1 du sujet \cite{Sujet} et dans l'article de \emph{Wang et al.} \cite{Wang2009}. La méthode de Wang demande un placement d'un pôle supplémentaire pour calculer les gains du PI-D. Nous avons choisi celui ci avec un graphique 'root-locus' en cherchant un pôle qui est plus rapide que les actuels afin de ne pas affecter la dynamique du système. En regardant la Figure ci dessous, on peut constater que un pôle à -5.66 satisfait ce critère.
 	
 	Conformément au cahier des charges, nous avons conservé les spécifications initiales pour la méthode de Wang, à savoir :
 	\begin{equation}
