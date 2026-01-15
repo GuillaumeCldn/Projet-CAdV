@@ -157,7 +157,7 @@ K_i = K_aug(end);% Gain pour l'intégrateur
 
 
 % Precommande
-H = -inv(C6_pour_h*inv(A6-B6*K6)*B6);
+H = -inv(C6_pour_h*inv(A6-B6*K_x)*B6);
 
 % Estimateur
 Cobs = [C6(1,:); C6(3,:); C6(4,:)]; %on veut se servir de la vitesse, de l'assiette, et le tangage
