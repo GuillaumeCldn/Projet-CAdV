@@ -406,7 +406,12 @@ font=\normalfont\large\bfseries]{subsection}
 		\item \textbf{Matrice $R$} : Les coefficients ont été ajustés pour éviter des sollicitations brutales des moteurs (limitation de la fatigue) et des gouvernes.
 	\end{itemize}
 	
-	
+	\begin{figure}[H]
+		\centering
+		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{schema_lineaire_optimale.png}}
+		\caption{Schéma de la commande optimale appliquée au modèle linéaire}
+		\label{fig:schema_lineaire_optimale}
+	\end{figure}
 	
 	\section{Analyse du couplage}
 	Contrairement aux lois SISO précédentes, la commande optimale LQT permet un \textbf{découplage} partiel des axes. Une variation de consigne de vitesse est compensée par une action combinée sur la poussée (action directe) et sur la profondeur (pour contrer le moment cabreur induit par les moteurs).
