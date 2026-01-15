@@ -172,7 +172,7 @@ if obsLuenberger < nLuenberger, disp('Estimateur Luenberger non observable'); en
 
 L6t = place(A6', Cobs', poles_desires(1:6));
 L6 = L6t';
-eig(A6-L6*Cobs);
+eig(A6-L6*Cobs); % on controle que les valeurs propres sont négatives donc système stable
 
 %% Commande Optimale/MIMO
 
@@ -182,7 +182,7 @@ Daero = 0; % Dépassement à la réponse indicielle
 tpente = 2; % Temps de réponse capture pente
 Dpente = 0; % Dépassement à la réponse indicielle
 
-%linéarisation en palier
+%linéarisation en palier pour les nouvelles conditions de vol
 hTrimLF = 30*FL2M; % m
 VaTrimLF = utEas2Tas(230*KTS2MS, hTrimLF); % m/s, 230 depuis la consigne
 trimValLF = utComputeTrimLevelFlight(hTrimLF,VaTrimLF,aircraftChosen,km,ms); %trim thrust idle (dphr, alpha, dthr)
@@ -209,14 +209,14 @@ uTrimLF(idelevator) = 0;
 xdotTrimLF = utAcDynamicsFunction(xTrimLF,uTrimLF,aircraftChosen,km,ms);
 [Alf, Blf, Clf, Dlf] = linmod('acDynModel_ToLinearize_2015',xTrimLF, uTrimLF);
 
-% Vérification de controlabilité et observabilité du système linéarisé
+% Vérification de controlabilité et observabilité du système linéarisé pour LF
 ctrMIMO = rank(ctrb(Alf,Blf));
 obsMIMO = rank(obsv(Alf,Clf));
 nMIMO = size(Alf);
 if ctrMIMO < nMIMO, disp('Système MIMO non contrôlable'); end
 if obsMIMO < nMIMO, disp('Système MIMO non observable'); end
 
-% Extraction pour LQT
+% Extraction pour LQT/tronquage pour ne pas utiliser h et y
 idx_states = iVa:iq; 
 idx_inputs = ithr:idelevator; % Entrées : Poussée et Gouverne
 
@@ -225,7 +225,7 @@ B_sys = Blf(idx_states, idx_inputs);
 
 
 C_sys = [1,  0, 0, 0; 
-         0, -1, 1, 0];
+         0, -1, 1, 0]; % on fait sortir la pente = assiette - incidence
      
 D_sys = zeros(4,2);
 
@@ -259,35 +259,33 @@ N = [Aaug, Baug;
 
 % Dimensions
 n_states = size(A_sys, 1); % 4
-n_ref = size(Ar, 1);       % 2
+n_ref = size(Ar, 1);       % 2 
 n_inputs = size(B_sys, 2); % 2
 n_outputs = size(C_sys, 1);% 2
 
 % Suite Commande Optimale/MIMO : Calcul des gains LQT
 
 % Définition des poids pour le critère quadratique J
-% Q : Pénalise l'erreur de suivi e = y - yr
+% Q pour l'erreur de suivi
 q_Va = 1000; %1 / (40)^2;      % Erreur en vitesse % 40 pour le linéaire marche bien
 q_gamma = 1000; %1 / (0.01)^2; % On veut tolérer 0.01 rad (environ 0.5 deg) d'erreur
 Q = diag([q_Va, q_gamma]);
 
-% R : Pénalise l'effort de commande u
-% u1 = poussée (ratio 0-1), u2 = elevator (rad)
+% R pour pénaliser les commandes
 r_th = 1;% / (0.5)^2;     % Pour la poussée % 0.5 en linéaire marche bien
 r_el = 1;% / (0.26)^2;     % Pour la gouverne (environ 15 deg) % 0.26 en linéaire marche bien
 R = diag([r_th, r_el]);
 
 % Equation de Riccati (LQR augmenté)
-% Le critère est e'*Q*e + u'*R*u.
-% Comme e = Caug * x_aug, on a x_aug' * (Caug'*Q*Caug) * x_aug
+
 Q_aug = Caug' * Q * Caug;
 
 % Calcul du gain optimal K_aug = [Kx, Kr]
-[K_aug, S, E] = lqr(Aaug, Baug, Q_aug, R);
+[K_aug, S, E] = lqr(Aaug, Baug, Q_aug, R); % on obtient les gains, 
 
 % Extraction des gains
 Kx = K_aug(:, 1:4); % Gain de retour d'état (sur Va, alpha, theta, q)
-Kr = K_aug(:, 5:6); % Gain sur l'état du modèle de référence
+Kr = K_aug(:, 5:6); % Gain sur l'état du modèle de référence (en sortie)
 
 %Vérification de l'observabilité et commandabilité du préfiltre optimal
 ctrOPT = rank(ctrb(Ar,Br));
@@ -297,7 +295,7 @@ if ctrOPT < nOPT, disp('Préfiltre optimal non contrôlable'); end
 if obsOPT < nOPT, disp('Préfiltre optimal non observable'); end
 
 % Vecteur second membre pour r_ss (Eq 3.71 modifiée)
-% Le système est : N * Z = [0; -Br; 0] * r_ss
+
 RHS_Mat = [zeros(n_states, n_ref); 
            -Br; 
            zeros(n_outputs, n_ref)];
