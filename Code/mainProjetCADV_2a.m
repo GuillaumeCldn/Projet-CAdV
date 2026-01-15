@@ -174,6 +174,15 @@ L6t = place(A6', Cobs', poles_desires(1:6));
 L6 = L6t';
 eig(A6-L6*Cobs); % on controle que les valeurs propres sont négatives donc système stable
 
+A_obs = A6 - L6*Cobs;
+sys_obs = ss(A_obs, eye(6), eye(6), zeros(6));
+
+% Affichage des pôles sur le plan complexe
+% figure;
+% pzmap(sys_obs);
+% grid on;
+% title('Pôles de l''observateur (Valeurs propres de A - LC)');
+
 %% Commande Optimale/MIMO
 
 taero = 20; % Temps de réponse capture vitesse aérodynamique
