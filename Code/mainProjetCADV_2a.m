@@ -297,13 +297,11 @@ Kx = K_aug(:, 1:4); % Gain de retour d'état (sur Va, alpha, theta, q)
 Kr = K_aug(:, 5:6); % Gain sur l'état du modèle de référence (en sortie)
 
 %Vérification de l'observabilité et commandabilité du préfiltre optimal
-ctrOPT = rank(ctrb(Ar,Br));
-obsOPT = rank(obsv(Ar,-Kr));
-nOPT = size(Ar,1);
+ctrOPT = rank(ctrb(A_sys, B_sys));
+obsOPT = rank(obsv(A_sys, C_sys));
+nOPT = size(A_sys,1);
 if ctrOPT < nOPT, disp('Préfiltre optimal non contrôlable'); end
 if obsOPT < nOPT, disp('Préfiltre optimal non observable'); end
-
-% Vecteur second membre pour r_ss (Eq 3.71 modifiée)
 
 RHS_Mat = [zeros(n_states, n_ref); 
            -Br; 
@@ -313,14 +311,12 @@ RHS_Mat = [zeros(n_states, n_ref);
 % M = [Nx; Nxr; Nu] tel que Z_ss = M * r_ss
 M = N \ RHS_Mat;
 
-Nx = M(1:n_states, :);             % Relation x_ss / r_ss
-Nxr = M(n_states+1:n_states+n_ref, :); % Relation xr_ss / r_ss
-Nu = M(end-n_inputs+1:end, :);     % Relation u_ss / r_ss
+Nx = M(1:n_states, :);             
+Nxr = M(n_states+1:n_states+n_ref, :);
+Nu = M(end-n_inputs+1:end, :);     
 
-% Calcul du gain de pré-commande Dpf (Eq 3.87)
-% upf = -Kr*xr + Dpf*r_ss
-% u = -Kx*x + upf
-% Dpf assure que u_ss est cohérent avec la référence
+% Calcul de la sortie préfiltre Dpf 
+
 Dpf = K_aug * [Nx; Nxr] + Nu;
 
 
