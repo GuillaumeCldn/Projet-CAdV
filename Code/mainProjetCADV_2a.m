@@ -290,11 +290,11 @@ R = diag([r_th, r_el]);
 Q_aug = Caug' * Q * Caug;
 
 % Calcul du gain optimal K_aug = [Kx, Kr]
-[K_aug, S, E] = lqr(Aaug, Baug, Q_aug, R); % on obtient les gains, 
+[Kaug, S, E] = lqr(Aaug, Baug, Q_aug, R); % on obtient les gains, 
 
 % Extraction des gains
-Kx = K_aug(:, 1:4); % Gain de retour d'état (sur Va, alpha, theta, q)
-Kr = K_aug(:, 5:6); % Gain sur l'état du modèle de référence (en sortie)
+Kx = Kaug(:, 1:4); % Gain de retour d'état (sur Va, alpha, theta, q)
+Kr = Kaug(:, 5:6); % Gain sur l'état du modèle de référence (en sortie)
 
 %Vérification de l'observabilité et commandabilité du préfiltre optimal
 ctrOPT = rank(ctrb(A_sys, B_sys));
@@ -317,7 +317,7 @@ Nu = M(end-n_inputs+1:end, :);
 
 % Calcul de la sortie préfiltre Dpf 
 
-Dpf = K_aug * [Nx; Nxr] + Nu;
+Dpf = Kaug * [Nx; Nxr] + Nu;
 
 
 
