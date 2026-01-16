@@ -273,7 +273,7 @@ font=\normalfont\large\bfseries]{subsection}
 	L'objectif de la loi de descente est de maintenir une vitesse équivalente (EAS) constante en agissant sur la consigne d'assiette $\theta_c$, la poussée restant figée à \emph{Idle}~\cite[4.6]{Sujet}.
 	
 	\section{Stratégie de commande modale}
-	La linéarisation est effectuée sur le modèle Simulink \texttt{acDynModelGolfTenueClassique}, qui inclut déjà la boucle interne d'assiette. Le système linéarisé $A_6$ est d'ordre 6 et correspond au vecteur d'état suivant :
+	La linéarisation est effectuée sur le modèle Simulink \texttt{Golf\_Lin\_Modale}, qui inclut déjà la boucle interne d'assiette. Le système linéarisé $A_6$ est d'ordre 6 et correspond au vecteur d'état suivant :
 	\begin{equation}
 		x = [V_a, \alpha, \theta, q, x_{\text{pid}}, x_{\text{pf}}]^T
 	\end{equation}
@@ -282,7 +282,7 @@ font=\normalfont\large\bfseries]{subsection}
 	
 	La commande modale consiste à choisir les pôles du système bouclé pour influencer le comportement de ses modes. La fonction MatLab \texttt{place} permet de calculer le gain du retour d'état qui sera utilisé pour commander le système (on note ce gain $K_x$).
 	
-	Le retour d'état seul ne permet pas de commander le système, on ajoute une précommande pour adapter la commande au retour d'état. La précommande est calculée ainsi~\cite[eq. 3.50]{Sujet}:
+	Le retour d'état seul ne permet pas de commander le système, car celui-ci présente une erreur statique en l'absence d'une précommande. Cette dernière est calculée comme suit~\cite[eq. 3.50]{Sujet}:
 	
 	\begin{equation}
 		H = -(C \cdot (A-B K)^{-1}\cdot B)^{-1}
@@ -351,7 +351,7 @@ font=\normalfont\large\bfseries]{subsection}
 	
 	\section{Modèle non linéaire}
 	
-	Le schéma suivant illustre l'intégration de la commande modale sur le système non linéaire. Nous avons conservé la possibilité d'alterner entre la précommande $H$ et l'intégrateur, même si l'intégrateur se révèle être supérieur. Il est aussi important de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
+	Le schéma suivant illustre l'intégration de la commande modale sur le système non linéaire. Nous avons conservé la possibilité d'alterner entre la précommande $H$ et l'intégrateur, même si l'intégrateur se révèle être supérieur. Il est aussi important de noter que l'intégrateur agit sur l'erreur de la TAS, même si le système cherche à réguler la EAS. Nous faisons ce choix car la TAS est indépendante de l'altitude et donc plus facile à stabiliser.
 	
 	\begin{figure}[H]
 		\centering
@@ -379,7 +379,7 @@ font=\normalfont\large\bfseries]{subsection}
 	
 	\section{Linéarisation}
 	
-	Pour mettre en œuvre la commande, on linéarise le modèle avion au nouveau point de trim : \SI{230}{kts} et \SI{3000}{ft}. Cette linéarisation est réalisée par \texttt{utAcDynamicsFunction.m} et donne le point de fonctionnement suivant :
+	Pour mettre en œuvre la commande, on linéarise le modèle avion au nouveau point de trim : \SI{230}{kts} et \SI{3000}{ft}. Cette linéarisation est réalisée par \texttt{utComputeTrimLevelFlight.m} et donne le point de fonctionnement suivant :
 	\begin{equation}
 		\text{trimValLF} = \left( \begin{array}{c}
 			\delta_{\text{PHR}} \\
@@ -420,7 +420,7 @@ font=\normalfont\large\bfseries]{subsection}
 	\begin{figure}[H]
 		\centering
 		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_lineaire_optimale.png}}
-		\caption{Réponse de la commande optimale appliquée au modèle linéaire à des échelons de pente de \SI{10}{\degree} et de vitesse de \SI{230}{kts}}
+		\caption{Réponse de la commande optimale appliquée au modèle linéaire à des échelons de pente de \SI{10}{\degree} et une réduction de vitesse de \SI{260}{kts} à \SI{230}{kts}}
 		\label{fig:reponse_lineaire_optimale}
 		
 		% AJOUT DU NOTA BENE ICI
@@ -436,7 +436,7 @@ font=\normalfont\large\bfseries]{subsection}
 	%----------------------------------------------------------
 	
 	\section{Gestion de la transition}
-	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition entre les lois de commande est faite via un bloc \texttt{Switch} qui bascule lorsque l'altitude de l'avion passe sous la barre de \SI{914}{m} (\SI{3000}{ft}). Ceci implique que l'avion se stabilise environ \SI{50}{ft} sous son altitude cible. On peut corriger cela naïvement en réglant le seuil du bloc \texttt{Switch} (un seuil à \SI{17}{m} fonctionne), ou en implémentant une loi qui gère plus finement la capture de l'altitude, par connaissance de la vitesse verticale et de la durée de la manœuvre.
+	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. On fait remarquer que la loi \textit{Level Flight} est cette fois utilisée sur une dynamique d'avion non-linéaire. La transition entre les lois de commande est faite via un bloc \texttt{Switch} qui bascule lorsque l'altitude de l'avion passe sous la barre de \SI{914}{m} (\SI{3000}{ft}). Ceci implique que l'avion se stabilise environ \SI{50}{ft} sous son altitude cible. On peut corriger cela naïvement en réglant le seuil du bloc \texttt{Switch} (un seuil à \SI{17}{m} fonctionne), ou en implémentant une loi qui gère plus finement la capture de l'altitude, par connaissance de la vitesse verticale et de la durée de la manœuvre.
 	
 	\section{Intégration des différentes lois de commandes}
 	
@@ -484,7 +484,7 @@ font=\normalfont\large\bfseries]{subsection}
 		\centering
 		\begin{subfigure}[b]{0.8\textwidth}
 			\includegraphics[width=\textwidth]{reponse_ALT_400.png}
-			\caption{Courbe de suivi de l'altitude}
+			\caption{Courbe de suivi de l'altitude en mètres}
 			\label{fig:reponse_finale_ALT}
 		\end{subfigure}
 		\begin{subfigure}[b]{0.8\textwidth}
@@ -548,19 +548,19 @@ font=\normalfont\large\bfseries]{subsection}
 	\chapter{Conclusion}
 	%----------------------------------------------------------
 	
-	Ce projet a permis de concevoir et valider une architecture de pilotage automatique complète pour la descente et la tenue de palier d'un Airbus A320. La démarche progressive, allant de la linéarisation à la validation non-linéaire, a permis de mettre en évidence plusieurs points clés de l'automatique aéronautique :
+	Ce projet a permis de concevoir et valider une architecture de pilotage automatique complète pour la descente et la tenue de palier d'un Airbus A320. Ce scénario est le même que Airbus résout avec la loi de commande \texttt{Alt *}. La démarche progressive, allant de la linéarisation à la validation non-linéaire, a permis de mettre en évidence plusieurs points clés de l'automatique aéronautique :
 	
 	\begin{itemize}
-		\item \textbf{Gestion des non-linéarités :} La linéarisation autour d'un point de trim est une méthode efficace pour la synthèse, mais elle montre ses limites lors des phases de grande amplitude (Open Descent). L'ajout d'intégrateurs s'est révélé indispensable pour compenser les variations paramétriques (notamment la densité de l'air) et annuler l'erreur statique du modèle réel.
+		\item \textbf{Gestion des non-linéarités :} La linéarisation autour d'un point de trim est une méthode efficace pour la synthèse, mais elle montre ses limites lors des phases de grande amplitude (\textit{Open Descent}). L'ajout d'intégrateurs s'est révélé indispensable pour compenser les variations paramétriques (notamment la densité de l'air) et annuler l'erreur statique du modèle réel.
 		\item \textbf{Apport de la commande multivariable :} La commande optimale (LQT) a offert une gestion supérieure des interactions entre la vitesse et la pente lors de la capture du niveau 30, assurant un découplage efficace difficile à obtenir avec des boucles SISO indépendantes.
 	\end{itemize}
 	
 	\paragraph{Analyse critique}
 	L'étude détaillée des signaux de commande lors de la simulation finale a cependant révélé les limites des réglages actuels vis-à-vis des contraintes physiques :
-	\begin{enumerate}
+	\begin{itemize}
 		\item \textbf{Compromis Performance/Sécurité :} Le respect strict du cahier des charges sur la capture de pente ($t_s < \SI{2}{s}$) contraint la gouverne de profondeur à la saturation. Bien que mathématiquement valide, cette dynamique est irréaliste d'un point de vue opérationnel (confort passager et contraintes structurelles).
 		\item \textbf{Sollicitation moteur :} Des oscillations importantes ont été observées sur la commande de poussée. Elles indiquent un réglage trop faible de la pénalité sur l'énergie de commande (matrice $R$) qui, bien que filtrées par l'inertie mécanique, pourraient être rejetées par les sécurités du calculateur moteur (FADEC).
-	\end{enumerate}
+	\end{itemize}
 	
 	\paragraph{Perspectives}
 	Pour fiabiliser cette loi de commande en vue d'une implémentation réelle, il conviendrait de relâcher la contrainte temporelle sur la capture de pente, d'augmenter le poids de la commande moteur dans le critère d'optimisation LQT, et d'intégrer explicitement les saturations de vitesse des gouvernes dans le modèle de synthèse.
