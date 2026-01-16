@@ -314,16 +314,14 @@ font=\normalfont\large\bfseries]{subsection}
 	
 	\begin{figure}[H]
 		\centering
-		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_lineaire_modale_prefiltre.png}}
+		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_comparee_modale_lineaire_legendee.png}}
 		\caption{Réponse de la commande modale à une consigne en échelon d'amplitude 3}
 		\label{fig:reponse_modale_prefiltre}
 	\end{figure}
 	
-	% TODO: Détailler
-	La réponse de cette commande n'est pas du tout satisfaisante : l'erreur statique est de l'ordre de $2.42$.
 	
 	\section{Gestion de l'erreur statique : Ajout d'un intégrateur}
-	Pour pallier les limitations de la précommande seule, le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse~\cite[3.6.2]{Sujet}. Cette approche est indispensable car le modèle linéaire varie fortement au cours de la descente.
+	Même si cette réponse, obtenue dans le cas linéaire, se satisfait de l'usage d'une simple précommande, le sujet suggère l'ajout d'un intégrateur pour annuler l'erreur statique de vitesse~\cite[3.6.2]{Sujet} dans le cas non-linéaire. En effet, nous constatons que pour le modèle non-linéaire, la précommande seule amène le système en divergence. Cela s'explique par la grande variation de la densité de l'air qui rend la linéarisation peu valable lors d'une longue descente.
 	Nous avons donc augmenté le système avec un état intégrateur $\xi$ défini par :
 	\begin{equation}
 		\dot{\xi} = V_{\text{EAS,cons}} - V_{\text{EAS,mes}}
@@ -404,8 +402,8 @@ font=\normalfont\large\bfseries]{subsection}
 	\section{Réglage des matrices de pondération}
 	Pour respecter les spécifications (temps de réponse $< \SI{20}{s}$ pour $V_a$ et $< \SI{2}{s}$ pour la pente, sans dépassement), nous avons choisi :
 	\begin{itemize}
-		\item \textbf{Matrice $Q$} : Une pondération forte a été placée sur l'erreur de pente pour garantir la réactivité de la boucle d'altitude.
-		\item \textbf{Matrice $R$} : Les coefficients ont été ajustés pour éviter des sollicitations brutales des moteurs (limitation de la fatigue) et des gouvernes.
+		\item \textbf{Matrice $Q$} : Une pondération forte a été placée sur l'erreur de pente pour garantir la réactivité de la boucle d'altitude. On a choisi les composantes de $Q$ de l'ordre de 1000.
+		\item \textbf{Matrice $R$} : Les coefficients ont été ajustés pour éviter des sollicitations brutales des moteurs (limitation de la fatigue) et des gouvernes. On a choisi les composantes de $R$ de l'ordre de 1.
 	\end{itemize}
 	
 	\begin{figure}[H]
