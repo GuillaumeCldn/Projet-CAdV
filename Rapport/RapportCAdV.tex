@@ -363,7 +363,7 @@ font=\normalfont\large\bfseries]{subsection}
 	
 	\section{Résultats de simulation}
 	
-	Le graphique suivant présente la réponse du modèle non linéaire à un échelon d'amplitude \SI{2}{kts} sur une durée de \SI{60}{s}. Le dépassment de l'ordre de \SI{0,2}{\%} et le temps de réponse de \SI{6}{s} sont adéquats. L'erreur statique relative est de l'ordre de \SI{0,1}{\%}, ce qui est suffisant pour un contrôle de la vitesse au noeud près. On peut donc conclure que le comportement de la loi de maintien de la vitesse sur le modèle non linéaire est satisfaisant.
+	Le graphique suivant présente la réponse du modèle non linéaire à un échelon d'amplitude \SI{2}{kts} sur une durée de \SI{60}{s}. Le dépassement de l'ordre de \SI{0,2}{\%} et le temps de réponse de \SI{6}{s} sont adéquats. L'erreur statique relative est de l'ordre de \SI{0,1}{\%}, ce qui est suffisant pour un contrôle de la vitesse au noeud près. On peut donc conclure que le comportement de la loi de maintien de la vitesse sur le modèle non linéaire est satisfaisant.
 	
 	\begin{figure}[H]
 		\centering
@@ -430,7 +430,7 @@ font=\normalfont\large\bfseries]{subsection}
 	%----------------------------------------------------------
 	
 	\section{Gestion de la transition}
-	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition entre les lois de commande est faite bar un bloc \texttt{Switch} qui bascule lorsque l'atitude de l'avion passe sous la barre de \SI{914}{m} (\SI{3000}{ft}). Ceci implique que l'avion se stabilise environ \SI{50}{ft} sous son altitude cible. On peut corriger cela naïvement en règlant le seuil du bloc \texttt{Switch} (un seuil à \SI{17}{m} fonctionne), ou en implémentant un loi qui gère plus finement la capture de l'altitude.
+	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition entre les lois de commande est faite via un bloc \texttt{Switch} qui bascule lorsque l'altitude de l'avion passe sous la barre de \SI{914}{m} (\SI{3000}{ft}). Ceci implique que l'avion se stabilise environ \SI{50}{ft} sous son altitude cible. On peut corriger cela naïvement en réglant le seuil du bloc \texttt{Switch} (un seuil à \SI{17}{m} fonctionne), ou en implémentant un loi qui gère plus finement la capture de l'altitude.
 
 	\section{Intégration des différentes lois de commandes}
 
