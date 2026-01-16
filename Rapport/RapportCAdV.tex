@@ -195,7 +195,20 @@ font=\normalfont\large\bfseries]{subsection}
 	Ce chapitre détaille la conception de la boucle interne de pilotage, dont l'objectif est d'asservir l'assiette longitudinale $\theta$ de l'avion via la gouverne de profondeur $\delta_{el}$~\cite[4.5]{Sujet}.
 	
 	\section{Synthèse du correcteur}
-	Nous avons retenu une structure de commande classique de type PI-D (Proportionnel, Intégral, Dérivé sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang, présentée dans le sujet au paragraphe 3.5.1~\cite{Sujet} et dans l'article de \emph{Wang et al.}~\cite{Wang2009}. La méthode de Wang demande le placement d'un pôle supplémentaire pour calculer les gains du PI-D. Nous avons choisi celui-ci avec un graphique \og root-locus\fg{} (lieu des racines) en cherchant un pôle qui est plus rapide que les actuels afin de ne pas affecter la dynamique du système. En regardant la figure ci-dessous, on peut constater qu'un pôle à $-5.66$ satisfait ce critère.
+	
+	\noindent
+	\begin{minipage}{0.60\textwidth}
+		Nous avons retenu une structure de commande classique de type PI-D (Proportionnel, Intégral, Dérivé sur la mesure) associée à un pré-filtre sur la consigne. Les gains ont été calculés via la méthode de Wang, présentée dans le sujet au paragraphe 3.5.1~\cite{Sujet} et dans l'article de \emph{Wang et al.}~\cite{Wang2009}. 
+		
+		La méthode de Wang demande le placement d'un pôle supplémentaire pour calculer les gains du PI-D. Nous avons choisi celui-ci avec un graphique \og root-locus\fg{} (lieu des racines) en cherchant un pôle qui est plus rapide que les actuels afin de ne pas affecter la dynamique du système. On a choisi un $K_d$ par cette méthode à -5.66, qui permet de maximiser l'efficacité du système, en plaçant des pôles très proches et rapides, en évitant la divergence des branches du root locus.
+	\end{minipage}
+	\hfill 
+	\begin{minipage}{0.35\textwidth}
+		\centering
+		\includegraphics[width=\linewidth]{rootlocus_Wang_classique.png}
+		\captionof{figure}{Lieu des racines}
+		\label{fig:wang_rootlocus}
+	\end{minipage}
 	
 	Conformément au cahier des charges, nous avons conservé les spécifications initiales pour la méthode de Wang, à savoir :
 	\begin{equation}
@@ -230,14 +243,14 @@ font=\normalfont\large\bfseries]{subsection}
 	\end{figure}
 	
 	\vspace{0.5cm}
-	Afin de valider la synthèse, nous avons superposé la réponse indicielle des deux modèles pour une consigne de \SI{5}{\degree}.
+	Afin de valider la synthèse, nous avons étudié la réponse du système pour un échelon en consigne de \SI{5}{\degree}.
 	
 	\begin{figure}[htbp]
 		\centering
 		\begin{minipage}[c]{0.58\textwidth}
 			\centering
-			\includegraphics[trim={0 0 0 0.82cm}, clip, width=\linewidth]{reponse_bilineaire_assiette.png}
-			\caption{Comparaison des réponses indicielles (Linéaire vs Non-linéaire)}
+			\includegraphics[trim={0 0 0 0.82cm}, clip, width=\linewidth]{reponse_lineaire_assiette.png}
+			\caption{Réponse du système linéarisé à un échelon en consigne}
 			\label{fig:reponse_bilineaire_assiette}
 		\end{minipage}
 		\hfill
@@ -248,7 +261,7 @@ font=\normalfont\large\bfseries]{subsection}
 			
 			\begin{enumerate}[leftmargin=*] 
 				\item \textbf{Spécifications :} Temps de réponse $\approx \SI{3}{s}$, dépassement $\approx 5\%$ (pic à $\approx \SI{5.25}{\degree}$).
-				\item \textbf{Validité :} Superposition parfaite des courbes rouge et bleue. La linéarisation est valide pour les faibles amplitudes ($5^\circ$).
+				\item \textbf{Validité :} On constate que la courbe est identique au cas non-linéaire par la suite. La linéarisation est valide pour les faibles amplitudes ($5^\circ$).
 			\end{enumerate}
 		\end{minipage}
 	\end{figure}
@@ -338,16 +351,6 @@ font=\normalfont\large\bfseries]{subsection}
 		\label{fig:schema_lineaire_modale}
 	\end{figure}
 	
-	La simulation de la commande modale avec intégrateur donne le résultat suivant :
-	\begin{figure}[H]
-		\centering
-		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_lineaire_modale_integrateur.png}}
-		\caption{Réponse de la commande modale à une consigne en échelon d'amplitude 3}
-		\label{fig:reponse_modale_integrateur}
-	\end{figure}
-	
-	Cette réponse est satisfaisante : le système répond en environ \SI{3.5}{s} et avec un dépassement de l'ordre de \SI{6}{\%}. Nous avons donc implémenté cette commande sur le modèle non linéaire.
-	
 	\section{Modèle non linéaire}
 	
 	Le schéma suivant illustre l'intégration de la commande modale sur le système non linéaire. Nous avons conservé la possibilité d'alterner entre la précommande $H$ et l'intégrateur, même si l'intégrateur se révèle être supérieur. Il est aussi important de noter que l'intégrateur agit sur l'erreur d'EAS (et non de TAS), car c'est la grandeur pilotée.
@@ -414,13 +417,20 @@ font=\normalfont\large\bfseries]{subsection}
 	\end{figure}
 	
 	\section{Analyse du couplage}
-	Contrairement aux lois SISO précédentes, la commande optimale LQT permet un \textbf{découplage} partiel des axes. Une variation de consigne de vitesse est compensée par une action combinée sur la poussée (action directe) et sur la profondeur (pour contrer le moment cabreur induit par les moteurs). Le graphique suivant illustre comment répond le modèle linéaire grâce ) ce découplage.
-
+	Contrairement aux lois SISO précédentes, la commande optimale LQT permet un \textbf{découplage} partiel des axes. Une variation de consigne de vitesse est compensée par une action combinée sur la poussée (action directe) et sur la profondeur (pour contrer le moment cabreur induit par les moteurs). Le graphique suivant illustre comment répond le modèle linéaire grâce à ce découplage.
+	
 	\begin{figure}[H]
 		\centering
 		\makebox[\textwidth][c]{\includegraphics[width=\textwidth]{reponse_lineaire_optimale.png}}
 		\caption{Réponse de la commande optimale appliquée au modèle linéaire à des échelons de pente de \SI{10}{\degree} et de vitesse de \SI{230}{kts}}
 		\label{fig:reponse_lineaire_optimale}
+		
+		% AJOUT DU NOTA BENE ICI
+		\vspace{0.2cm} % Un petit espace vertical
+		\begin{minipage}{0.9\textwidth} % Pour centrer et limiter la largeur du texte
+			\footnotesize
+			\textbf{N.B. :} Les courbes de vitesse et de pente sont superposées sur la même figure car leurs valeurs numériques sont du même ordre de grandeur. Il convient toutefois de distinguer les unités : la vitesse est en nœuds (kts) et la pente en degrés (\si{\degree}).
+		\end{minipage}
 	\end{figure}
 
 	%----------------------------------------------------------
@@ -428,7 +438,7 @@ font=\normalfont\large\bfseries]{subsection}
 	%----------------------------------------------------------
 	
 	\section{Gestion de la transition}
-	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition entre les lois de commande est faite via un bloc \texttt{Switch} qui bascule lorsque l'altitude de l'avion passe sous la barre de \SI{914}{m} (\SI{3000}{ft}). Ceci implique que l'avion se stabilise environ \SI{50}{ft} sous son altitude cible. On peut corriger cela naïvement en réglant le seuil du bloc \texttt{Switch} (un seuil à \SI{17}{m} fonctionne), ou en implémentant un loi qui gère plus finement la capture de l'altitude.
+	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition entre les lois de commande est faite via un bloc \texttt{Switch} qui bascule lorsque l'altitude de l'avion passe sous la barre de \SI{914}{m} (\SI{3000}{ft}). Ceci implique que l'avion se stabilise environ \SI{50}{ft} sous son altitude cible. On peut corriger cela naïvement en réglant le seuil du bloc \texttt{Switch} (un seuil à \SI{17}{m} fonctionne), ou en implémentant un loi qui gère plus finement la capture de l'altitude, par connaissance de la vitesse verticale et de la durée de la manœuvre.
 
 	\section{Intégration des différentes lois de commandes}
 
@@ -461,6 +471,7 @@ font=\normalfont\large\bfseries]{subsection}
 		\label{fig:schemas_commandes_final}
 	\end{figure}
 
+	\pagebreak
 	\section{Analyse des résultats globaux}
 	La simulation complète montre une descente fluide à \SI{260}{kts} EAS. Lors de l'approche du FL30 :
 	\begin{enumerate}
@@ -473,17 +484,12 @@ font=\normalfont\large\bfseries]{subsection}
 
 	\begin{figure}[H]
 		\centering
-		\begin{subfigure}[b]{0.4\textwidth}
+		\begin{subfigure}[b]{0.8\textwidth}
 			\includegraphics[width=\textwidth]{reponse_ALT_400.png}
 			\caption{Courbe de suivi de l'altitude}
 			\label{fig:reponse_finale_ALT}
 		\end{subfigure}
-		\begin{subfigure}[b]{0.4\textwidth}
-			\includegraphics[width=\textwidth]{reponse_EAS_400.png}
-			\caption{Courbe de suivi de la vitesse.}
-			\label{fig:reponse_finale_EAS_long}
-		\end{subfigure}
-		\begin{subfigure}[b]{0.4\textwidth}
+		\begin{subfigure}[b]{0.8\textwidth}
 			\includegraphics[width=\textwidth]{reponse_EAS_294-314.png}
 			\caption{Courbe de suivi de la vitesse à la capture du niveau FL30}
 			\label{fig:reponse_finale_EAS_short}
