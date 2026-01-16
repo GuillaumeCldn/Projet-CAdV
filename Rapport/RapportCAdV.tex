@@ -311,7 +311,7 @@ font=\normalfont\large\bfseries]{subsection}
 	\end{equation}
 	L'observabilité de la paire $(A_6, C_{\text{obs}})$ a été validée (rang plein).
 	
-	Pour le calcul du gain $L$, bien que la théorie suggère généralement une dynamique d'erreur d'estimation plus rapide que celle de la commande, nous avons choisi de placer les pôles de l'observateur sur les mêmes dynamiques que celles du système en boucle fermée (vecteur \texttt{poles\_desires(1:6)}). Ce choix vise à limiter l'amplification du bruit de mesure sur les états estimés, notamment sur l'incidence $\alpha$. D'après les tests effectués, ce réglage s'est avéré satisfaisant pour notre application et une dynamique plus rapide n'a pas semblé nécessaire.
+	Pour le calcul du gain $L$, afin de respecter la dynamique d'erreur d'estimation qui doit être plus rapide que celle de la commande, nous avons choisi de placer les pôles de l'observateur à trois fois la dynamique du système en boucle fermée (soit $3 \times$ \texttt{poles\_desires(1:6)}). Ce réglage nous semble être le compromis le plus sain : il assure une convergence suffisamment rapide de l'estimation pour le contrôle, tout en évitant une dynamique excessive qui amplifierait inutilement le bruit de mesure sur les états estimés, notamment sur l'incidence $\alpha$. On a validé la convergence rapide de l'observateur d'état en mesurant l'erreur d'estimation dans le cas d'une condition initiale randomisée, que l'observateur était chargé de filtrer.
 	
 	\section{Choix des pôles}
 	Pour calculer le gain du retour d'état, nous avons choisi les pôles suivants :

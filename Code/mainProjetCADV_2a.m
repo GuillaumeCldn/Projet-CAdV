@@ -170,7 +170,7 @@ if ctrLuenberger < nLuenberger, disp('Estimateur Luenberger non contrôlable'); e
 if obsLuenberger < nLuenberger, disp('Estimateur Luenberger non observable'); end
 
 
-L6t = place(A6', Cobs', poles_desires(1:6));
+L6t = place(A6', Cobs', 3*poles_desires(1:6)); % On multiplie par 3 les pôles du système pour assurer que l'observateur sera bien plus rapide.
 L6 = L6t';
 eig(A6-L6*Cobs); % on controle que les valeurs propres sont négatives donc système stable
 
