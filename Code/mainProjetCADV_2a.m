@@ -290,7 +290,7 @@ R = diag([r_th, r_el]);
 Q_aug = Caug' * Q * Caug;
 
 % Calcul du gain optimal K_aug = [Kx, Kr]
-[Kaug, S, E] = lqr(Aaug, Baug, Q_aug, R); % on obtient les gains, 
+[Kaug, S, E] = lqr(Aaug, Baug, Q_aug, R); % on obtient les gains 
 
 % Extraction des gains
 Kx = Kaug(:, 1:4); % Gain de retour d'état (sur Va, alpha, theta, q)
@@ -308,10 +308,9 @@ RHS_Mat = [zeros(n_states, n_ref);
            zeros(n_outputs, n_ref)];
 
 % Résolution pour trouver les matrices de gains statiques
-% M = [Nx; Nxr; Nu] tel que Z_ss = M * r_ss
 M = N \ RHS_Mat;
 
-Nx = M(1:n_states, :);             
+Nx = M(1:n_states, :);               
 Nxr = M(n_states+1:n_states+n_ref, :);
 Nu = M(end-n_inputs+1:end, :);     
 
