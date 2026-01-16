@@ -216,7 +216,7 @@ uTrimLF(idelevator) = 0;
 
 % Vérification trim
 xdotTrimLF = utAcDynamicsFunction(xTrimLF,uTrimLF,aircraftChosen,km,ms);
-[Alf, Blf, Clf, Dlf] = linmod('acDynModel_ToLinearize_2015',xTrimLF, uTrimLF);
+[Alf, Blf, Clf, Dlf] = linmod('acDynModel_ToLinearize_2015',xTrimLF , uTrimLF);
 
 % Vérification de controlabilité et observabilité du système linéarisé pour LF
 ctrMIMO = rank(ctrb(Alf,Blf));
