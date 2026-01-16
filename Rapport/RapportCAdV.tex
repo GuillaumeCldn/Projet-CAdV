@@ -92,8 +92,6 @@ font=\normalfont\large\bfseries]{subsection}
 	\listoffigures
 	\vspace{1cm} % Ajuster cette valeur selon le remplissage de la page
 	
-	\listoftables
-	\vspace{1cm}
 	
 	\bibliographystyle{plain-fr}
 	\bibliography{rapportCAdV}
@@ -438,10 +436,10 @@ font=\normalfont\large\bfseries]{subsection}
 	%----------------------------------------------------------
 	
 	\section{Gestion de la transition}
-	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition entre les lois de commande est faite via un bloc \texttt{Switch} qui bascule lorsque l'altitude de l'avion passe sous la barre de \SI{914}{m} (\SI{3000}{ft}). Ceci implique que l'avion se stabilise environ \SI{50}{ft} sous son altitude cible. On peut corriger cela naïvement en réglant le seuil du bloc \texttt{Switch} (un seuil à \SI{17}{m} fonctionne), ou en implémentant un loi qui gère plus finement la capture de l'altitude, par connaissance de la vitesse verticale et de la durée de la manœuvre.
-
+	Le passage de la loi \textit{Open Descent} (vitesse tenue par l'assiette) aux lois de maintien (vitesse tenue par la poussée) constitue une phase critique du vol. La transition entre les lois de commande est faite via un bloc \texttt{Switch} qui bascule lorsque l'altitude de l'avion passe sous la barre de \SI{914}{m} (\SI{3000}{ft}). Ceci implique que l'avion se stabilise environ \SI{50}{ft} sous son altitude cible. On peut corriger cela naïvement en réglant le seuil du bloc \texttt{Switch} (un seuil à \SI{17}{m} fonctionne), ou en implémentant une loi qui gère plus finement la capture de l'altitude, par connaissance de la vitesse verticale et de la durée de la manœuvre.
+	
 	\section{Intégration des différentes lois de commandes}
-
+	
 	\begin{figure}[H]
 		\centering
 		\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{schema_nonlineaire_final.png}}
@@ -449,7 +447,7 @@ font=\normalfont\large\bfseries]{subsection}
 		\label{fig:schema_final}
 	\end{figure}
 	
-
+	
 	\begin{figure}[H]
 		\centering
 		\begin{subfigure}[b]{\textwidth}
@@ -470,9 +468,9 @@ font=\normalfont\large\bfseries]{subsection}
 		\caption{Schémas des différentes commandes internes}
 		\label{fig:schemas_commandes_final}
 	\end{figure}
-
+	
 	\pagebreak
-	\section{Analyse des résultats globaux}
+	\section{Analyse de la trajectoire et des vitesses}
 	La simulation complète montre une descente fluide à \SI{260}{kts} EAS. Lors de l'approche du FL30 :
 	\begin{enumerate}
 		\item La loi de capture d'altitude réduit la pente.
@@ -481,7 +479,7 @@ font=\normalfont\large\bfseries]{subsection}
 	\end{enumerate}
 	
 	\
-
+	
 	\begin{figure}[H]
 		\centering
 		\begin{subfigure}[b]{0.8\textwidth}
@@ -497,17 +495,74 @@ font=\normalfont\large\bfseries]{subsection}
 		\caption{Courbes d'altitude et de vitesse pendant la descente au niveau FL30}
 		\label{fig:reponse_descente_final}
 	\end{figure}
-
+	
+	\section{Analyse des efforts de commande}
+	
+	Pour compléter l'analyse des performances, il est indispensable de vérifier l'évolution des trois entrées de commande lors du scénario complet. L'objectif est de s'assurer que les sollicitations restent dans le domaine admissible des actionneurs et ne présentent pas de comportements aberrants.
+	
+	\begin{figure}[H]
+		\centering
+		
+		% --- BLOC 1 : PHR ---
+		\begin{minipage}[c]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\linewidth]{actionneurs_final_PHR.png}
+		\end{minipage}
+		\hfill
+		\begin{minipage}[c]{0.48\textwidth}
+			\textbf{Plan Horizontal Réglable ($\delta_{PHR}$)} \\
+			L'évolution de la commande du PHR suit logiquement les changements de point de trim au cours de la descente. On constate que ses variations s'effectuent par paliers lors des transitions entre les différentes phases de vol, ce qui correspond au comportement attendu pour un organe d'équilibrage à dynamique lente.
+		\end{minipage}
+		
+		\vspace{0.5cm} % Espacement vertical entre les blocs
+		
+		% --- BLOC 2 : GAZ ---
+		\begin{minipage}[c]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\linewidth]{actionneurs_final_THR.png}
+		\end{minipage}
+		\hfill
+		\begin{minipage}[c]{0.48\textwidth}
+			\textbf{Commande de poussée ($\delta_{thr}$)} \\
+			On observe des oscillations d'environ \SI{10}{Hz} et de forte amplitude. Si l'inertie mécanique protège le moteur, ce comportement est inacceptable pour le FADEC qui risquerait de se mettre en sécurité. Ce phénomène suggère un réglage trop lâche de la matrice $R$ dans la commande optimale : le coût énergétique est sous-évalué. Un réglage plus fin lisserait cette commande.
+		\end{minipage}
+		
+		\vspace{0.5cm} % Espacement vertical entre les blocs
+		
+		% --- BLOC 3 : ELEVATORS ---
+		\begin{minipage}[c]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\linewidth]{actionneurs_final_elevator.png}
+		\end{minipage}
+		\hfill
+		\begin{minipage}[c]{0.48\textwidth}
+			\textbf{Gouverne de profondeur ($\delta_{el}$)} \\
+			La gouverne a un comportement cohérent mais atteint brutalement sa saturation lors de la ressource pour la capture de pente. Cette sollicitation extrême résulte de la spécification imposant un temps de réponse de \SI{2}{s}. Bien que le cahier des charges soit respecté, une telle dynamique pourrait s'avérer dangereuse structurellement ou inconfortable.
+		\end{minipage}
+		
+		\caption{Analyse détaillée des trois actionneurs lors de la simulation complète}
+		\label{fig:analyse_actionneurs_sidebyside}
+	\end{figure}
+	
 	%----------------------------------------------------------
 	\chapter{Conclusion}
 	%----------------------------------------------------------
 	
-	Ce projet a permis de valider une architecture de pilotage automatique complète. Nous avons pu observer que :
+	Ce projet a permis de concevoir et valider une architecture de pilotage automatique complète pour la descente et la tenue de palier d'un Airbus A320. La démarche progressive, allant de la linéarisation à la validation non-linéaire, a permis de mettre en évidence plusieurs points clés de l'automatique aéronautique :
+	
 	\begin{itemize}
-		\item La linéarisation est un outil puissant mais nécessite l'ajout d'intégrateurs pour compenser les dérives du modèle non-linéaire en cours de descente.
-		\item La commande optimale MIMO offre une bien meilleure gestion des interactions entre les axes que la simple juxtaposition de boucles SISO.
+		\item \textbf{Gestion des non-linéarités :} La linéarisation autour d'un point de trim est une méthode efficace pour la synthèse, mais elle montre ses limites lors des phases de grande amplitude (Open Descent). L'ajout d'intégrateurs s'est révélé indispensable pour compenser les variations paramétriques (notamment la densité de l'air) et annuler l'erreur statique du modèle réel.
+		\item \textbf{Apport de la commande multivariable :} La commande optimale (LQT) a offert une gestion supérieure des interactions entre la vitesse et la pente lors de la capture du niveau 30, assurant un découplage efficace difficile à obtenir avec des boucles SISO indépendantes.
 	\end{itemize}
 	
-	\paragraph{Limites et perspectives}
-	Pour améliorer le réalisme, il serait nécessaire d'intégrer des saturations sur les vitesses de déflexion des gouvernes (\SI{15}{\degree/s} pour la profondeur) et de prendre en compte la dynamique plus lente du PHR par rapport à la gouverne de profondeur.
+	\paragraph{Analyse critique}
+	L'étude détaillée des signaux de commande lors de la simulation finale a cependant révélé les limites des réglages actuels vis-à-vis des contraintes physiques :
+	\begin{enumerate}
+		\item \textbf{Compromis Performance/Sécurité :} Le respect strict du cahier des charges sur la capture de pente ($t_s < \SI{2}{s}$) contraint la gouverne de profondeur à la saturation. Bien que mathématiquement valide, cette dynamique est irréaliste d'un point de vue opérationnel (confort passager et contraintes structurelles).
+		\item \textbf{Sollicitation moteur :} Des oscillations importantes ont été observées sur la commande de poussée. Elles indiquent un réglage trop faible de la pénalité sur l'énergie de commande (matrice $R$) qui, bien que filtrées par l'inertie mécanique, pourraient être rejetées par les sécurités du calculateur moteur (FADEC).
+	\end{enumerate}
+	
+	\paragraph{Perspectives}
+	Pour fiabiliser cette loi de commande en vue d'une implémentation réelle, il conviendrait de relâcher la contrainte temporelle sur la capture de pente, d'augmenter le poids de la commande moteur dans le critère d'optimisation LQT, et d'intégrer explicitement les saturations de vitesse des gouvernes dans le modèle de synthèse.
+
 \end{document}
