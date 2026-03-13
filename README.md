@@ -44,7 +44,7 @@ Le dépôt est organisé de la manière suivante :
 À l'aide des scripts MATLAB mis à disposition et complétés, le système est capable de :
 1. Déterminer les caractéristiques de vol et les données structurelles du modèle d'avion sélectionné.
 2. Calculer le point d'équilibre.
-3. Simuler la réponse de l'avion à des variations de consigne (poussée, gouverne de profondeur, et plan d'empennage horizontal réglable - PHR) pour respecter une consigne de vol *OPEN Descent*.
+3. Simuler la réponse de l'avion à des variations de consigne (poussée, gouverne de profondeur, et plan d'empennage hgit fsckorizontal réglable - PHR) pour respecter une consigne de vol *OPEN Descent*.
 
 
 Pour consulter les résultats de nos simulations et nos conclusions sur ce projet, lire le rapport: `Rapport/RapportCAdV.pdf`
