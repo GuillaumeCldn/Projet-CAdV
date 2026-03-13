@@ -29,10 +29,10 @@ Nous avons développé trois commandes différentes pour ce projet:
 Le dépôt est organisé de la manière suivante :
 
 * **`Code/`** : Contient l'ensemble des scripts MATLAB (`.m`) utilisés pour la simulation et la commande de l'avion.
-    Les fonctions utilitaires suivantes ont été fournies par nos professeurs:
-  * **Fonctions de dynamiques et aérodynamiques :** `utAcDynamicsFunction.m`, `utAeroForcesAndMoments.m`, `utCLalpha.m`, `utThrust.m`...
-  * **Fonctions de conversion et atmosphère :** `utTas2Eas.m`, `utRho.m`, `utTemp.m`...
-  * **Gestion des données avion et Trim :** `utAircraftData.m` (données de plusieurs modèles d'avions commerciaux), `utGetTrimPoint.m` (initialisation des conditions de vol par groupe), `utComputeTrimIdle.m`.
+    *Les fonctions utilitaires suivantes ont été fournies par nos professeurs:*
+  * **Fonctions de dynamique et d'aérodynamique :** `utAcDynamicsFunction.m`, `utAeroForcesAndMoments.m`, `utCLalpha.m`, `utThrust.m`...
+  * **Fonctions de conversion et d'atmosphère :** `utTas2Eas.m`, `utRho.m`, `utTemp.m`...
+  * **Gestion des données avion et trim :** `utAircraftData.m` (données de plusieurs modèles d'avions commerciaux), `utGetTrimPoint.m` (initialisation des conditions de vol par groupe), `utComputeTrimIdle.m`.
 * **`Rapport/`** : Dossier contenant le rapport final du projet et ses ressources.
 * **`Sujet CaDV.pdf`** : Le sujet officiel détaillant les exigences du projet.
 * **`consignes_rapport_projet_IENAC24_Avi.pdf`** : Les consignes de rédaction pour le rapport IENAC.
@@ -42,6 +42,9 @@ Le dépôt est organisé de la manière suivante :
 ##  Résultats et simulation
 
 À l'aide des scripts MATLAB mis à disposition et complétés, le système est capable de :
-1. Déterminer les caractéristiques de vol et les données structurelles du modèle d'avion sélectionné (pour le groupe GOLF).
-2. Calculer le point d'équilibre d'urgence ou de régime stationnaire via des algorithmes de résolution (`fsolve`).
+1. Déterminer les caractéristiques de vol et les données structurelles du modèle d'avion sélectionné.
+2. Calculer le point d'équilibre.
 3. Simuler la réponse de l'avion à des variations de consigne (poussée, gouverne de profondeur, et plan d'empennage horizontal réglable - PHR) pour respecter une consigne de vol *OPEN Descent*.
+
+
+Pour consulter les résultats de nos simulations et nos conclusions sur ce projet, lire le rapport: `Rapport/RapportCAdV.pdf`
